@@ -103,7 +103,7 @@ Please [refers to our Wiki](../../wiki), it provides more in-depth knowledge on 
 
 We invite you to follow the development and community updates on Xenograte:
 
-- To raise a question, an idea, or want to start a discussion, go to the [Xenograte Community][23] linkedin group.
+- To raise a question, an idea, or start a discussion, visit the [Xenograte Community][23] linkedin group.
 - Follow [@nodally][21] on Twitter.
 - Read and subscribe to the [Nodally Blog][22].
 
