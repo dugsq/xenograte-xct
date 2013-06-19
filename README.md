@@ -40,7 +40,7 @@ class EchoNode
   end
 end
 ```
-The above is an echo Xenode. All it does is write the received message to its children. Assigning children to a Xenode is done through [**orchestration**.](#in-xenograte-we-call-orchestration-of-the-worker-processes---xenoflow)
+The above is an echo Xenode. All it does is write the received message to its children.
 
 ```ruby
 class HelloWorldNode
@@ -89,7 +89,7 @@ xflow1:
       path: echo_node
       children: []
 ```
-When you [run this XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever `n1` [receives a message](../../Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2`. 
+When you [run the above XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever `n1` [receives a message](../../Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2`. 
 
 ## Digging Deeper
 
