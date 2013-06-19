@@ -5,8 +5,8 @@ Xenograte Community Toolkit (XCT)
 flow of the data shared between them, within one server or across multiple servers.
 
 **Xenograte Community Toolkit (XCT)** provides you with a Command Line Interface (CLI) and other required 
-resources to build and debug those worker processes, in [Ruby](http://www.ruby-lang.org/en/), on your local 
-machine. You can then weave these worker processes together into powerful integrations and automations.
+resources to build, test, and debug those worker processes, in [Ruby](http://www.ruby-lang.org/en/), on a 
+single machine. You can then weave these worker processes together into powerful integrations and automations.
 
 ### Environment
 * Tested on Mac OS X and Ubuntu
