@@ -69,7 +69,7 @@ XenoFlow is just a YAML file that defined the way the message flows between Xeno
 
 In this XenoFlow, Xenode `n1` has one child `n2`, and `n2` has no child. 
 
-The result, after you [run the XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever [`n1` receieve a message](../../Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2` 
+The result, after you [run the XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever [`n1` receive a message](../../Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2` 
 
 ```yaml
 ---
@@ -91,7 +91,7 @@ xflow1:
 
 ## Digging Deeper
 
-Please [refers to our Wiki](../../wiki), it provides more in-depth knowledge on the follwoing topics:
+Please [refers to our Wiki](../../wiki), it provides more in-depth knowledge on the following topics:
 
 1. [**Xenode:** the worker process](../../wiki/Xenode)
 2. [**XenoFlow:** orchestration of the worker processes](../../wiki/Xenoflow)
