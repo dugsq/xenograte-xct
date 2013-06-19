@@ -91,7 +91,7 @@ xflow1:
 
 ## Digging Deeper
 
-Please [refers to our Wiki](../../wiki), it provides more in-depth knowledge on the following topics:
+Please refer to the [Wiki](../../wiki) for more in-depth knowledge on the following topics:
 
 1. [**Xenode:** the worker process](../../wiki/Xenode)
 2. [**XenoFlow:** orchestration of the worker processes](../../wiki/Xenoflow)
