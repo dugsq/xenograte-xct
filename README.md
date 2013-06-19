@@ -72,8 +72,6 @@ A XenoFlow is just a YAML file that defined the way a message flows between Xeno
 
 In this XenoFlow, Xenode `n1` has one child `n2`, and `n2` has no child. 
 
-The result, after you [run the XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever [`n1` receive a message](../../Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2` 
-
 ```yaml
 ---
 xflow1:
@@ -91,6 +89,7 @@ xflow1:
       path: echo_node
       children: []
 ```
+When you [run this XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever `n1` [receives a message](../../Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2`. 
 
 ## Digging Deeper
 
