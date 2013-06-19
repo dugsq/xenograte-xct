@@ -28,7 +28,7 @@ machine. You can then weave these worker processes together into powerful integr
 ## Quick Start
 
 #### in Xenograte, we call a worker process a *Xenode*
-There are basically three types of worker processes (Xenodes). The first produces data and does not read messages (producer), the second that will read and write messages (producer/consumer), and the third that just reads messages (consumer).
+There are basically three types of worker processes (Xenodes). The first produces data and does not read messages (producer). The second that will read and write messages (producer/consumer), and the third that just reads messages (consumer).
 Any xenode can be one of these three types. It just depends on what methods you implement in your xenode.
 
 A simple producer/consumer xenode can look like the following:
@@ -40,7 +40,7 @@ class EchoNode
   end
 end
 ```
-The above is an echo xenode. All it does is write the received message to it's children. Assigning children to a Xenode is done through [**orchestration**.](#in-xenograte-we-call-orchestration-of-the-worker-processes---xenoflow)
+The above is an echo xenode. All it does is write the received message to its children. Assigning children to a Xenode is done through [**orchestration**.](#in-xenograte-we-call-orchestration-of-the-worker-processes---xenoflow)
 ```ruby
 class HelloWorldNode
   include XenoCore::NodeBase
@@ -51,7 +51,7 @@ class HelloWorldNode
   end
 end
 ```
-The above is a hello world xenode as a producer example. It will write a message to it's children every 1.5 seconds when the loop_delay value is set to 1.5. The message will have the value of "hello world" in it's data.
+The above is a hello world xenode as a producer example. It will write a message to its children every 1.5 seconds when the loop_delay value is set to 1.5. The message will have the value of "hello world" in its data.
 ```ruby
 class DataWriterNode
   include XenoCore::NodeBase
