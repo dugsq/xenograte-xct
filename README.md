@@ -89,7 +89,7 @@ xflow1:
       path: echo_node
       children: []
 ```
-When you [run the above XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever `n1` [receives a message](../../Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2`. 
+When you [run the above XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever `n1` [receives a message](../../wiki/Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2`. 
 
 ## Digging Deeper
 
