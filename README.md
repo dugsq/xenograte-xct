@@ -29,9 +29,9 @@ single machine. You can then weave these worker processes together into powerful
 
 #### in Xenograte, we call a worker process a *Xenode*
 There are basically three types of worker processes (Xenodes). The first produces data and does not read messages (producer). The second that will read and write messages (producer/consumer), and the third that just reads messages (consumer).
-Any xenode can be one of these three types. It just depends on what methods you implement in your xenode.
+Any xenode can be one of these three types. It just depends on what methods you implement in your Xenode.
 
-A simple producer/consumer xenode can look like the following:
+A simple producer/consumer Xenode can look like the following:
 ```ruby
 class EchoNode
   include XenoCore::NodeBase
@@ -40,7 +40,8 @@ class EchoNode
   end
 end
 ```
-The above is an echo xenode. All it does is write the received message to its children. Assigning children to a Xenode is done through [**orchestration**.](#in-xenograte-we-call-orchestration-of-the-worker-processes---xenoflow)
+The above is an echo Xenode. All it does is write the received message to its children. Assigning children to a Xenode is done through [**orchestration**.](#in-xenograte-we-call-orchestration-of-the-worker-processes---xenoflow)
+
 ```ruby
 class HelloWorldNode
   include XenoCore::NodeBase
@@ -51,7 +52,8 @@ class HelloWorldNode
   end
 end
 ```
-The above is a hello world xenode as a producer example. It will write a message to its children every 1.5 seconds when the loop_delay value is set to 1.5. The message will have the value of "hello world" in its data.
+The above is a "Hello World" Xenode as a producer example. It will write a message to its children every 1.5 seconds when the loop_delay value is set to 1.5. The message will have the value of "hello world" in its data.
+
 ```ruby
 class DataWriterNode
   include XenoCore::NodeBase
@@ -62,10 +64,11 @@ class DataWriterNode
   end
 end
 ```
-The above is a data writer xenode. It looks at the inbound message's context for file_name to which to write the data. As a consumer it does not write messages to any children as it is a terminus node.
-#### in Xenograte, we call orchestration of the worker processes - XenoFlow
+The above is a data writer Xenode. It looks at the inbound message's context for file_name to which to write the data. As a consumer it does not write messages to any children as it is a terminus node.
 
-XenoFlow is just a YAML file that defined the way the message flows between Xenodes.
+#### in Xenograte, we call an orchestration of the worker processes a XenoFlow
+
+A XenoFlow is just a YAML file that defined the way a message flows between Xenodes.
 
 In this XenoFlow, Xenode `n1` has one child `n2`, and `n2` has no child. 
 
