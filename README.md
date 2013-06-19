@@ -4,7 +4,7 @@ Xenograte Community Toolkit (XCT)
 **Xenograte** is a platform that allows users to manage and orchestrate worker processes, and easily design 
 flow of the data shared between them, within one server or across multiple servers.
 
-**Xenograte Community Toolkit (XCT)** provides you with a CLI (Command Line Interface) and other required 
+**Xenograte Community Toolkit (XCT)** provides you with a Command Line Interface (CLI) and other required 
 resources to build and debug those worker processes, in [Ruby](http://www.ruby-lang.org/en/), on your local 
 machine. You can then weave these worker processes together into powerful integrations and automations.
 
