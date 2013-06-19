@@ -27,18 +27,42 @@ machine. You can then weave these worker processes together into powerful integr
 
 ## Quick Start
 
-#### in Xenograte, we call worker process - Xenode
-The simplest Xenode can look like the following:
+#### in Xenograte, we call a worker process a *Xenode*
+There are basically three types of worker processes (Xenodes). The first produces data and does not read messages (producer), the second that will read and write messages (producer/consumer), and the third that just reads messages (consumer).
+Any xenode can be one of these three types. It just depends on what methods you implement in your xenode.
+
+A simple producer/consumer xenode can look like the following:
 ```ruby
 class EchoNode
   include XenoCore::NodeBase
-  def process_message(message)
-    write_to_children(message)
+  def process_message(msg)
+    write_to_children(msg)
   end
 end
 ```
-We will name this Xenode EchoNode. All it does is to pass the received message to it's children. To assigned a child to a Xenode, that is through **orchestration**
-
+The above is an echo xenode. All it does is write the received message to it's children. Assigning children to a Xenode is done through [**orchestration**.](#in-xenograte-we-call-orchestration-of-the-worker-processes---xenoflow)
+```ruby
+class HelloWorldNode
+  include XenoCore::NodeBase
+  def process()
+    msg = XenoCore::Message.new
+    msg.data = "hello world"
+    write_to_children(msg)
+  end
+end
+```
+The above is a hello world xenode as a producer example. It will write a message to it's children every 1.5 seconds when the loop_delay value is set to 1.5. The message will have the value of "hello world" in it's data.
+```ruby
+class DataWriterNode
+  include XenoCore::NodeBase
+  def process_message(msg)
+    File.open(msg.context[:filename], 'w') do |f|
+      f.write(msg.data)
+    end
+  end
+end
+```
+The above is a data writer xenode. It looks at the inbound message's context for file_name to which to write the data. As a consumer it does not write messages to any children as it is a terminus node.
 #### in Xenograte, we call orchestration of the worker processes - XenoFlow
 
 XenoFlow is just a YAML file that defined the way the message flows between Xenodes.
