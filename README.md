@@ -9,8 +9,8 @@ resources to build and debug those worker processes, in [Ruby](http://www.ruby-l
 machine. You can then weave these worker processes together into powerful integrations and automations.
 
 ### Environment
-* Tested on Mac OSX and Ubuntu
-* Currently NOT support Windows
+* Tested on Mac OS X and Ubuntu
+* Currently does NOT support Windows
 
 ### Prerequisites
 
