@@ -1,0 +1,27 @@
+---
+xflow2:
+  id: xflow2
+  xenodes:
+    x2n1:
+      id: x2n1
+      klass: FileReaderNode
+      path: file_reader_node
+      children:
+      - x2n2
+    x2n2:
+      id: x2n2
+      klass: CsvToHashNode
+      path: csv_to_hash_node
+      children:
+      - x2n3
+    x2n3:
+      id: x2n3
+      klass: EstimateArrivalNode
+      path: estimate_arrival_node
+      children: 
+      - x2n4
+    x2n4:
+      id: x2n4
+      klass: FileWriterNode
+      path: file_writer_node
+      children: []

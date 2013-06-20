@@ -1,0 +1,35 @@
+---
+context: 
+  !ruby/symbol sqlite3_node:
+    PurchaseOrderNumber: '|ponum|'
+    OrderDate: '|odate|'
+    PartNumber: '|pnum|'
+    ProductName: '|pname|'
+    Quantity: '|qty|'
+    USPrice: '|price|'
+    ShipDate: '|sdate|'
+    ShipMethod: '|smethod|'
+    Comment: '|comment|'
+    ArrivalDate: '|adate|'
+data: 
+  - PurchaseOrderNumber: '99503' 
+    OrderDate: '2013-03-10'
+    PartNumber: '872-AA'
+    ProductName: 'Lawnmower'
+    Quantity: 50
+    USPrice: 148.95
+    ShipDate: '2013-03-11'
+    ShipMethod: 'AIR'
+    Comment: 'Confirm Order by 2013-03-10'
+    ArrivalDate: '2013-05-11'
+  - PurchaseOrderNumber: '23567' 
+    OrderDate: '2013-03-14'
+    PartNumber: '17-A6-23'
+    ProductName: 'Particle Cannon'
+    Quantity: 3
+    USPrice: 1948628.95
+    ShipDate: '2013-03-16'
+    ShipMethod: 'SEA'
+    Comment: 'Confirm Order by 2013-03-15'
+    ArrivalDate: '2013-03-16'
+

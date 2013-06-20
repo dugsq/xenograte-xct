@@ -1,0 +1,32 @@
+---
+order_arrival_estimator:
+  id: order_arrival_estimator
+  xenodes:
+    n1:
+      id: n1
+      klass: GmailReaderNode
+      path: gmail_reader_node
+      children:
+      - n2
+    n2:
+      id: n2
+      klass: CSVToHashNode
+      path: csv_to_hash_node
+      children:
+      - n3
+    n3:
+      id: n3
+      klass: EstimateArrivalNode
+      path: estimate_arrival_node
+      children:
+      - n4
+    n4:
+      id: n4
+      klass: SQLite3Node
+      path: sqlite3_node
+      children: []
+    n5:
+      id: n5
+      klass: GmailSenderNode
+      path: gmail_sender_node
+      children: []
