@@ -1,12 +1,11 @@
 # CONTRIBUTING
 
-The xenograte-xct project welcomes new contributors.  This document will guide you
-through the process.
+The xenograte-xct project welcomes new contributors. This document will guide you through the process.
 
 
 ### FORK THE PROJECT
 
-Fork the project on [GitHub](https://github.com/nodally/xenograte-xct) and check out
+Fork the project on the [GitHub repository](https://github.com/nodally/xenograte-xct) and check out
 your copy.
 
 ```
@@ -15,17 +14,15 @@ $ cd xenograte-xct
 $ git remote add upstream git@github.com:Nodally/xenograte-xct.git
 ```
 
-Most of the features/bug fixes should be applied to the development branch.
-The master branch is "stable" branch and therefore only bug fixes
-should be applied to the master branch which is basically **frozen**.
+Most of the features/bug fixes should be applied to the development branch. The master branch is "stable" 
+branch and therefore only bug fixes should be applied to the master branch which is basically **frozen**.
 
-Bundled dependancies listed in the Gemfile are not part of the project 
-so any changes to those projects should be sent the respective project 
-owners as we can not accept those changes.
+Bundled dependancies listed in the Gemfile are not part of the project so any changes to those projects 
+should be sent the respective project owners as we can not accept those changes.
 
-We invite you to follow the development and community updates on Xenograte
-so if you questions, concerns, ideas, or just need help: 
-- go to the [Xenograte Community][23] linkedin group.
+We invite you to follow the development and community updates on Xenograte so if you have any questions, 
+concerns, ideas, or just need help: 
+- Go to the [Xenograte Community][23] linkedin group.
 - Follow [@nodally][21] on Twitter.
 - Read and subscribe to the [Nodally Blog][22].
 
@@ -33,17 +30,16 @@ so if you questions, concerns, ideas, or just need help:
 [22]: http://blog.nodally.com
 [23]: http://www.linkedin.com/groups/Xenograte-Community-5068501
 
-The xeno CLI and instancing components are written in such a way that they
-will provide worker compatibilty with the Xenograte Cloud version.
-Patches and bug fixes are welcome to these tools but keep in mind that in
-order for you to use your workers on that system we will need to maintain
-compatibility through those tools. 
+The Command-line Interface and instancing components are written in such a way that they will provide 
+worker compatibilty with the Xenograte Cloud Edition.
+
+Patches and bug fixes are welcome to these tools but keep in mind that in order for you to use your 
+workers on that system we will need to maintain compatibility through these tools. 
 
 
 ### BRANCH
 
-Having decided on the right branch.  Create a feature branch
-and start hacking:
+Having decided on the right branch. Create a feature branch and start hacking:
 
 ```
 $ git checkout -b my-new-feature -t origin/master
@@ -58,8 +54,8 @@ $ git config --global user.name "A. Person"
 $ git config --global user.email "a.person@example.com"
 ```
 
-Writing good commit logs is important.  A commit log should describe what
-changed and why.  Follow these guidelines when writing one:
+Writing good commit logs is important. A commit log should describe what changed and why. Follow these 
+guidelines when writing one:
 
 1. The first line should contain a short (50 characters or less) 
    description of the change prefixed with the name of the changed
@@ -128,4 +124,3 @@ contribution by including the the following licensing notice adjacent to the
 copyright notice for the Original Work:
 
 Licensed to xenograte-xct under the Academic Free License (AFL 3.0)
-
