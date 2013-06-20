@@ -10,7 +10,7 @@ order_arrival_estimator:
       - n2
     n2:
       id: n2
-      klass: CSVToHashNode
+      klass: CsvToHashNode
       path: csv_to_hash_node
       children:
       - n3
