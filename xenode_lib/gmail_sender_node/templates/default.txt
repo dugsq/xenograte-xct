@@ -1,0 +1,4 @@
+
+This is a text template for the gmail_sender_node
+
+Tokens from context are interpolated if inserted like this: {{token1}}

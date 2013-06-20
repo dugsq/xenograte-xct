@@ -1,0 +1,10 @@
+source "http://rubygems.org"
+        
+gem 'em-synchrony'    ,"=1.0.3"
+gem 'uuidtools'       ,">=2.1.3"
+gem 'em-hiredis'      ,"=0.2.1"
+gem 'msgpack'         ,">=0.5.1"
+gem 'escort'          ,">=0.4.0"
+gem 'redis'           ,">=3.0.2"
+gem 'gmail'           ,">=0.4.0"
+gem 'sqlite3'         ,">=1.3.7"
