@@ -20,7 +20,7 @@ single machine. You can then weave these worker processes together into powerful
 
 ### To Install:
 
-1. Download or Clone the repo: `git clone git@github.com:Nodally/xenograte-xct.git`
+1. [Fork the repo](https://help.github.com/articles/fork-a-repo).
 2. Change directory to the downloaded xenograte-xct project root.
 3. make sure ruby gem 'bundler' is installed by using `gem list`. If it's not in the list, do a `gem install bundler` http://gembundler.com/
 4. install required ruby gems by running `bundle install`
