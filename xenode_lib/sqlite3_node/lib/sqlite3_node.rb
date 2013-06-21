@@ -69,7 +69,7 @@ class SQLite3Node
 
     @debug = @config[:debug]
     
-    # conveinience 
+    # convenience 
     do_debug("#{mctx} - config: #{@config.inspect}")
     
     # Open the local database
