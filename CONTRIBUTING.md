@@ -5,7 +5,7 @@ The xenograte-xct project welcomes new contributors. This document will guide yo
 
 ### FORK THE PROJECT
 
-Fork the project on the [GitHub repository](https://github.com/nodally/xenograte-xct) and check out
+[Fork](https://help.github.com/articles/fork-a-repo) the project on the [GitHub repository](https://github.com/nodally/xenograte-xct) and check out
 your copy.
 
 ```
