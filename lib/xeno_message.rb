@@ -13,11 +13,10 @@ module XenoCore
     PACKED_PREFIX = "|^P^|"
     CMD_PREFIX = "~cmd"
     
-    attr_accessor :to_sock_id, :msg_id, :correlation_id, :to_id, :from_id, 
+    attr_accessor :msg_id, :correlation_id, :to_id, :from_id, 
                   :command, :context, :data, :account_id, :stamp
     
     def initialize(opts = {})
-      @to_sock_id     = opts[:to_sock_id]
       @account_id     = opts[:account_id]
       @stamp          = opts.fetch(:stamp, Time.now.strftime(STAMP_FMT))
       @msg_id         = opts.fetch(:msg_id, new_id)
@@ -42,7 +41,6 @@ module XenoCore
       # preserve context and data content keys
       msg_hash = symbolize_hash_keys(msg)
 
-      @to_sock_id = msg_hash[:to_sock_id]
       @account_id = msg_hash[:account_id]
       @stamp = msg_hash[:stamp]
       @msg_id = msg_hash[:msg_id]
@@ -66,7 +64,6 @@ module XenoCore
     
     def to_hash
       msg_hash = {}
-      msg_hash[:to_sock_id] = @to_sock_id
       msg_hash[:account_id] = @account_id
       msg_hash[:stamp] = @stamp
       msg_hash[:msg_id] = @msg_id
@@ -77,19 +74,6 @@ module XenoCore
       msg_hash[:context] = @context
       msg_hash[:data] = @data
       msg_hash
-    end
-  
-    def to_sock_msg
-      to_sock_id = ""
-      if @to_sock_id && @to_sock_id.is_a?(Array)
-        @to_sock_id.each do |sid|
-          to_sock_id << sid
-          to_sock_id << " "
-        end
-      else
-        to_sock_id = @to_sock_id.to_str
-      end
-      [to_sock_id, "", pack]
     end
   
     def self.unpack(msg)
