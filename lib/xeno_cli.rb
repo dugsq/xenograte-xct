@@ -33,18 +33,22 @@ module Xeno
           Xeno::write_configs(xenode)
           
           puts "Starting Xenode: #{xenode_id}"
+          
+          # don't start it if it is already running
+          unless Xeno::xenode_running?(xenode_id)
+            # run the xenode
+            exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
+            exec_cmd << "-f #{xenode_file} -k #{klass} "
+            exec_cmd << "-i #{xenode_id.to_s} "
+            exec_cmd << "-d " if @debug
 
-          # run the xenode
-          exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
-          exec_cmd << "-f #{xenode_file} -k #{klass} "
-          exec_cmd << "-i #{xenode_id.to_s} "
-          exec_cmd << "-d " if @debug
+            pid = fork do
+              exec(exec_cmd)
+            end
 
-          pid = fork do
-            exec(exec_cmd)
+            Process.detach(pid)
+            
           end
-
-          Process.detach(pid)
 
         end
 
@@ -113,20 +117,26 @@ module Xeno
                   xenode_file = xenode['path']
 
                   Xeno::write_configs(xenode)
+                  
+                  # don't start it if it is already running
+                  unless Xeno::xenode_running?(xenode_id)
+                    puts "Starting Xenode: #{xenode_id}"
+                    
+                    # run the xenode
+                    exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
+                    exec_cmd << "-f #{xenode_file} -k #{klass} "
+                    exec_cmd << "-i #{xenode_id.to_s} "
+                    exec_cmd << "-d " if @debug
 
-                  puts "Starting Xenode: #{xenode_id}"
+                    pid = fork do
+                      exec(exec_cmd)
+                    end
 
-                  # run the xenode
-                  exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
-                  exec_cmd << "-f #{xenode_file} -k #{klass} "
-                  exec_cmd << "-i #{xenode_id.to_s} "
-                  exec_cmd << "-d " if @debug
-
-                  pid = fork do
-                    exec(exec_cmd)
+                    Process.detach(pid)
+                  
+                  else
+                    puts "Xenode #{xenode_id} is already running."  
                   end
-
-                  Process.detach(pid)
 
                 end
               else
@@ -433,7 +443,27 @@ module Xeno
       end
     end
   end
-
+  
+  def self.xenode_running?(xenode_id)
+    ret_val = false
+    pid_path = File.expand_path(File.join(lib_dir,'..','run','pids',"#{xenode_id}_pid"))
+    puts "pid_path: #{pid_path}"
+    if File.exist?(pid_path)
+      pid = nil
+      pid = File.read(pid_path) if File.exist?(pid_path)
+      puts "pid is #{pid.inspect}"
+      if pid
+        begin
+          Process.kill(0, pid.to_i)
+          puts "Xenode #{xenode_id} is running."
+          ret_val = true
+        rescue Errno::ESRCH
+        end
+      end
+    end
+    ret_val
+  end
+  
   def self.text_to_hash(hash_text)
     ret_val = nil
     if hash_text
@@ -493,7 +523,7 @@ module Xeno
       end
 
       if File.exist?(run_cfg_path)
-        puts "File exists #{run_cfg_path}"
+        puts "Config file exists #{run_cfg_path}"
 
         yml = File.read(run_cfg_path)
         run_cfg = YAML.load(yml) if yml
