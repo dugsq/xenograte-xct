@@ -1,0 +1,7 @@
+---
+loop_delay: 5
+enabled: true
+debug: true
+has_header: true
+row_delim: "\n"
+col_delim: ","
