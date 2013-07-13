@@ -68,7 +68,7 @@ The above is a data writer Xenode. It looks at the inbound message's context for
 
 #### in Xenograte, we call an orchestration of the worker processes a XenoFlow
 
-A XenoFlow is just a YAML file that defined the way a message flows between Xenodes.
+A XenoFlow is just a YAML file that defines the way a message flows between Xenodes.
 
 In this XenoFlow, Xenode `n1` has one child `n2`, and `n2` has no child. 
 
