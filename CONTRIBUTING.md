@@ -17,7 +17,7 @@ $ git remote add upstream git@github.com:Nodally/xenograte-xct.git
 Most of the features/bug fixes should be applied to the development branch. The master branch is "stable" 
 branch and therefore only bug fixes should be applied to the master branch which is basically **frozen**.
 
-Bundled dependancies listed in the Gemfile are not part of the project so any changes to those projects 
+Bundled dependencies listed in the Gemfile are not part of the project so any changes to those projects 
 should be sent the respective project owners as we can not accept those changes.
 
 We invite you to follow the development and community updates on Xenograte so if you have any questions, 
