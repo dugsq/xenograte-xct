@@ -39,9 +39,7 @@ class HashToCsvNode
   include XenoCore::NodeBase
 
   # Initialization of variables derived from @config.
-  #
-  # @param opts [Hash]
-  def startup(opts = {})
+  def startup
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
 
     @debug = @config[:debug]
@@ -155,6 +153,6 @@ class HashToCsvNode
 
   # If incorrect data is submitted, log error but keep running
   rescue Exception => e
-    @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
+    catch_error("#{mctx} - #{e.inspect} #{e.backtrace}")
   end
 end
