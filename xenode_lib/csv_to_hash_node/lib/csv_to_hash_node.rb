@@ -9,17 +9,12 @@ class CsvToHashNode
   # the EM-synchrony loop
   #
   # == Parameters:
-  # format::
-  #   A Hash with keys as symbols. The default is an empty Hash.
-  #
-  #   A Logger object is provided by the runtime via the :log key.
+  # none.
   #
   # == Returns:
   # none.
   #
-  def startup(opts = {})
-    # opts[:log] is passed in by runtime if available
-    @log = opts[:log]
+  def startup
     # set defaults @has_header is always true
     # as message data is expected to be comma separated values with the first row
     # designating the headers
@@ -45,7 +40,7 @@ class CsvToHashNode
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
     begin
       if msg
-        @log.debug("#{mctx} - got message: #{msg.inspect}", true) if @debug
+        do_debug("#{mctx} - got message: #{msg.inspect}", true)
         @has_header = true
         if msg.context 
           @row_delim = msg.context[:row_delim] if msg.context[:row_delim]
@@ -59,7 +54,7 @@ class CsvToHashNode
         end
       end
     rescue Exception => e
-      @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
+      catch_error("#{mctx} - #{e.inspect} #{e.backtrace}")
     end
   end
   

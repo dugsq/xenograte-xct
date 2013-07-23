@@ -7,11 +7,10 @@ require 'fileutils'
 class FileReaderNode
   include XenoCore::NodeBase
   
-  def startup(opts = {})
+  def startup
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
     
-    @log = opts[:log]
-    @log.debug("#{mctx} - config: #{@config.inspect}")
+    do_debug("#{mctx} - config: #{@config.inspect}")
     
     # get where to look for the file
     if @config[:rel_path]

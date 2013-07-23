@@ -6,11 +6,10 @@ require 'date'
 class EstimateArrivalNode
   include XenoCore::NodeBase
   
-  def startup(opts = {})
+  def startup
     # a handy way to log class and method
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-    # use the default logger supplied by the system
-    @log = opts[:log]
+
     # log the configuration (so we know we got it right.)
     # do_debug (will log only if the @debug flag is set in the config)
     do_debug("#{mctx} - config: #{@config.inspect}")

@@ -155,7 +155,7 @@ class InstanceXenode
 
       # call xenode's startup() method
       do_debug("#{mctx} - calling startup on xenode.", true)
-      @xenode_obj.startup({:log => @log})
+      @xenode_obj.startup
 
       # capture the signal so we can die nice
       [:QUIT, :TERM, :INT].each do |sig|

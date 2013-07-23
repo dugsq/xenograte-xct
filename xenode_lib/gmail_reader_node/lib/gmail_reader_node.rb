@@ -14,11 +14,9 @@ class GmailReaderNode
   include XenoCore::NodeBase
 
   # Initialization of variables derived from @config.
-  # @param [Hash] opts
-  # @option opts [:log] Logger instance.
-  def startup(opts = {})
+  def startup
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-    @log = opts[:log]
+
     do_debug("#{mctx} - config: #{@config.inspect}")
   end
 
@@ -79,7 +77,7 @@ class GmailReaderNode
       end
 
     rescue Exception => e
-      @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
+      catch_error("#{mctx} - #{e.inspect} #{e.backtrace}")
     end
     ret_val
   end

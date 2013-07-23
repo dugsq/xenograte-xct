@@ -2,8 +2,9 @@
 # Licensed under the Open Software License version 3.0
 # http://opensource.org/licenses/OSL-3.0
 
-# gem sqlite3 (1.3.7)
-require 'sqlite3'
+
+require 'sqlite3' # gem (1.3.7)
+require 'fileutils'
 
 #
 # @version 0.1.0
@@ -62,24 +63,34 @@ class SQLite3Node
   include XenoCore::NodeBase
 
   # Initialization of variables derived from @config.
-  #
-  # @param opts [Hash]
-  def startup(opts = {})
+  def startup
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
 
     @debug = @config[:debug]
     
     # convenience 
     do_debug("#{mctx} - config: #{@config.inspect}")
-    
-    # Open the local database
+
+    # Get path to database
+    db_path = nil
     if @config[:rel_path]
-      @db = SQLite3::Database.new File.join(@shared_dir, @config[:db_path].to_s).to_s
+      db_path = File.join(@shared_dir, @config[:db_path]).to_s
     else
-      @db = SQLite3::Database.new @config[:db_path].to_s
+      db_path = @config[:db_path].to_s
     end
-    @start_time = 0.0
-    @msg_count = 0
+
+    # Create database file if it currently doesn't exist
+    # You will still run into SQL issues if there aren't any
+    # tables and/or data inside the database
+    # You can create sql templates which will run 
+    # a Create Table statement.
+    unless File.exists?(db_path)
+      do_debug("Database file not found. Creating empty database file: #{db_path}")
+      FileUtils.touch(db_path)
+    end
+      
+    # Open the local database
+    @db = SQLite3::Database.new(db_path)
   end
 
   # Writes the database output to children. If no output was given then
@@ -119,9 +130,6 @@ class SQLite3Node
 
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
     return_val = []
-
-    @start_time = Time.now.to_f unless @start_time > 0.0
-    @msg_count += 1
 
     # Load SQL template file
     # Read the SQL statement from the template file
@@ -201,11 +209,11 @@ class SQLite3Node
     # Catch SQL errors
     # Example, creating a table that already exists
     rescue SQLite3::SQLException => sql_e
-      @log.error("#{mctx} - #{sql_e.inspect} #{sql_e.backtrace}")
+      catch_error("#{mctx} - #{sql_e.inspect} #{sql_e.backtrace}")
     end
 
   # If incorrect data is submitted, log error but keep running
   rescue Exception => e
-    @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
+    catch_error("#{mctx} - #{e.inspect} #{e.backtrace}")
   end
 end
