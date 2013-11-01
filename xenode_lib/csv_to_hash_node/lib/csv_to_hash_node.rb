@@ -17,17 +17,19 @@ class CsvToHashNode
   # == Returns:
   # none.
   #
-  def startup(opts = {})
-    # opts[:log] is passed in by runtime if available
-    @log = opts[:log]
+  def startup()
     # set defaults @has_header is always true
     # as message data is expected to be comma separated values with the first row
+    
     # designating the headers
     @has_header = true
+    
     # row delimeter defaults to newline "\n"
-    @row_delim = "\n"
+    @row_delim = @config.fetch(:row_delim, "\n")
+    
     # field or column delimeter defaults to a comma
-    @col_delim = ','
+    @col_delim = @config.fetch(:col_delim, ",")
+
   end
   
   # Processes incoming messages provided by the runtime.
@@ -46,7 +48,6 @@ class CsvToHashNode
     begin
       if msg
         @log.debug("#{mctx} - got message: #{msg.inspect}", true) if @debug
-        @has_header = true
         if msg.context 
           @row_delim = msg.context[:row_delim] if msg.context[:row_delim]
           @col_delim = msg.context[:col_delim] if msg.context[:col_delim]

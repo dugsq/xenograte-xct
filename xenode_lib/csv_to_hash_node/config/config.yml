@@ -3,5 +3,5 @@ loop_delay: 0.5
 enabled: true
 debug: false
 header: true
-children:
-- csv_out
+row_delim: "\n"
+col_delim: ","

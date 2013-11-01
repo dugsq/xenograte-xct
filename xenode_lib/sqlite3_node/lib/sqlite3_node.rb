@@ -64,7 +64,7 @@ class SQLite3Node
   # Initialization of variables derived from @config.
   #
   # @param opts [Hash]
-  def startup(opts = {})
+  def startup()
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
 
     @debug = @config[:debug]

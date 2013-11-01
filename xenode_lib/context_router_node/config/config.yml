@@ -1,0 +1,15 @@
+---
+enabled: true
+loop_delay: 5.0
+debug: false
+routes:
+  -
+    context_key: comp_name
+    match_value: "ABC CO"
+    match_case: false
+    node_id:
+  -
+    context_key: doc_type
+    match_value: EDI-850
+    match_case: true
+    node_id:

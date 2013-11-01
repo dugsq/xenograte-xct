@@ -1,0 +1,10 @@
+---
+xeno_queue_test_flow:
+  id: xeno_queue_test_flow
+  xenodes:
+    tn1:
+      id: tn1
+      klass: SingleMessageNode
+      path: single_message_node
+      children:
+      - tn2

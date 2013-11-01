@@ -1,0 +1,7 @@
+---
+xf:
+  xenodes:
+    x1:
+      path: echo_node
+      children: 
+      - 

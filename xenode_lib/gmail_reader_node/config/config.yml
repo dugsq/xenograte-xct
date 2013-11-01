@@ -6,7 +6,8 @@
 enabled: true
 loop_delay: 60.0
 debug: true
-user_name: email@example.com
-passwd: password
-sender: recipient@example.com
-children: []
+user_name: nodallydemo@gmail.com
+passwd: KarButtShoE4977
+sender: dougs@nodally.com
+children:
+- nm2

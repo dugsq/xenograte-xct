@@ -1,6 +1,6 @@
 source "http://rubygems.org"
         
-gem 'em-synchrony'    ,"=1.0.3"
+gem 'eventmachine'    ,"=1.0.3"
 gem 'uuidtools'       ,">=2.1.3"
 gem 'em-hiredis'      ,"=0.2.1"
 gem 'msgpack'         ,">=0.5.1"

@@ -1,30 +1,42 @@
-# Copyright Nodally Technologies Inc. 2013
-# Licensed under the Open Software License version 3.0
-# http://opensource.org/licenses/OSL-3.0
+# XenoCore::Nodebase
+# Copyright © Nodally Technologies Inc. 2009 - 2013 (All Rights Reserved).
+#
 
 module XenoCore
 
   module NodeBase
 
     attr_reader :config, :msg_count, :start_time
-
+    
     # initialize class variables from framework
     def initialize(opts)
       begin
         @account_id  = "XCT"
         @xenoflow_id = opts[:xenoflow_id]
-        @xenode_id   = opts[:xenode_id]
-        @shared_dir  = opts[:shared_dir]
-        @log_path    = opts[:log_path]
         @log         = opts[:log]
-        @log.debug("#{self.class}.#{__method__} opts[:xenode_config]: #{opts[:xenode_config]}")
-        @config      = {}
-        @config      = opts[:xenode_config]
+        @xenode_id   = opts[:xenode_id]
+        @disk_dir    = opts[:disk_dir]
+        @log_path    = opts[:log_path]
+        @tmp_dir     = opts[:config][:tmp_dir] if opts[:config]
+        @config      = opts[:config]
+        @debug       = opts[:config][:debug] if opts[:config]
         @loop_delay  = opts.fetch(:loop_delay, 5.0)
-        @loop_delay  = @config[:loop_delay] if @config[:loop_delay]
-        @log.debug("#{self.class}.#{__method__} loop_delay: #{@loop_delay}")
+        @msg_count   = 0
+        @start_time  = 0.0
+        
+        opts = nil
+        
       rescue Exception => e
-        warn "#{e.inspect} #{e.backtrace}"
+        emsg = "#{self.class}.#{__method__} - #{e.inspect} #{e.backtrace}"
+        if @log
+          @log.error(emsg)
+        else
+          if @log_path
+            File.open(@log_path, "a") do |f|
+              f.write("#{Time.now} #{emsg}")
+            end
+          end
+        end
       end
     end
 
@@ -74,6 +86,15 @@ module XenoCore
         @log ? @log.error(error_message) : warn(error_message)
         raise(Exception, error_message) if reraise
       end
+    end
+    
+    def resolve_sys_dir(fp)
+      if fp
+        do_debug("@disk_dir: #{@disk_dir.inspect} @tmp_dir: #{@tmp_dir}")
+        fp.gsub!("@this_node", @disk_dir) if fp.include?("@this_node") && @disk_dir
+        fp.gsub!("@this_server", @tmp_dir) if fp.include?("@this_server") && @tmp_dir
+      end
+      fp
     end
     
   end

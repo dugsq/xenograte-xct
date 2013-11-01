@@ -29,27 +29,29 @@ module XenoCore
     end
   
     def load(msg)
-      # parse msg from different mechanisms
-      # msg = msg[2] if msg.is_a?(Array)
+      # if it's a xeno message get its hash
       msg = msg.to_hash if msg.is_a?(XenoCore::Message)
-      unless msg.is_a?(Hash)
-        if msg[0..4] == PACKED_PREFIX
-          msg = XenoCore::Message.unpack(msg)
-        end
+      
+      # unpack it if it is packed
+      if msg.is_a?(String)
+        msg[0..4] == PACKED_PREFIX
+        msg = XenoCore::Message.unpack(msg)
       end
       
-      # preserve context and data content keys
-      msg_hash = symbolize_hash_keys(msg)
-
-      @account_id = msg_hash[:account_id]
-      @stamp = msg_hash[:stamp]
-      @msg_id = msg_hash[:msg_id]
-      @correlation_id = msg_hash[:correlation_id]
-      @to_id = msg_hash[:to_id]
-      @from_id = msg_hash[:from_id]
-      @command = msg_hash[:command]
-      @context = msg_hash[:context]
-      @data = msg_hash[:data]
+      # load local values if its a hash
+      if msg.is_a?(Hash)
+        # preserve context and data content keys
+        msg_hash = symbolize_hash_keys(msg)
+        @account_id = msg_hash[:account_id]
+        @stamp = msg_hash[:stamp]
+        @msg_id = msg_hash[:msg_id]
+        @correlation_id = msg_hash[:correlation_id]
+        @to_id = msg_hash[:to_id]
+        @from_id = msg_hash[:from_id]
+        @command = msg_hash[:command]
+        @context = msg_hash[:context]
+        @data = msg_hash[:data]
+      end
       self
     end
     

@@ -1,0 +1,5 @@
+---
+loop_delay: 5.0
+enabled: true
+debug: false
+max_msgs: 1000

@@ -54,7 +54,6 @@ Escort::App.create do |app|
 
       # call the action to run a xenoflow
       xenoflow_cmd.action do |options, arguments|
-        puts "calling RunXenoFlow"
         Xeno::RunXenoFlow.new(options, arguments).execute
       end
 
