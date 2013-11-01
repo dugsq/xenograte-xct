@@ -5,10 +5,9 @@
 class FileWriterNode
   include XenoCore::NodeBase
   
-  def startup(opts = {})
+  def startup
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-    @log = opts[:log]
-    @log.debug("#{mctx} - config: #{@config.inspect}")
+    do_debug("#{mctx} - config: #{@config.inspect}")
   end
 
   def process_message(msg)

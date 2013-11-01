@@ -2,8 +2,9 @@
 # Licensed under the Open Software License version 3.0
 # http://opensource.org/licenses/OSL-3.0
 
-# gem sqlite3 (1.3.7)
-require 'sqlite3'
+
+require 'sqlite3' # gem (1.3.7)
+require 'fileutils'
 
 #
 # @version 0.1.0

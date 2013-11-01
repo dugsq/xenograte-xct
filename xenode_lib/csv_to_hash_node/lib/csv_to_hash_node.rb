@@ -60,7 +60,7 @@ class CsvToHashNode
         end
       end
     rescue Exception => e
-      @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
+      catch_error("#{mctx} - #{e.inspect} #{e.backtrace}")
     end
   end
   

@@ -27,9 +27,8 @@ class GmailSenderNode
   include XenoCore::NodeBase
 
   # Initialization of instance variables and checking of config data will be done in this method.
-  # @param opts [Hash]
   # @return []
-  def startup(opts = {})
+  def startup
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
     do_debug("#{mctx} - config: #{@config.inspect}")
 
@@ -204,7 +203,7 @@ class GmailSenderNode
     end
     cfg
   rescue => e
-    @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
+    catch_error("#{mctx} - #{e.inspect} #{e.backtrace}")
   end
 
   # Resolves tokens in template from :tokens hash in cfg param.
