@@ -515,6 +515,7 @@ module Xeno
         Xeno::write_xenoflows_to_file(xenoflow_file_name, xenoflows)
       end
       
+      run_cfg = {'config'=>run_cfg}
       run_cfg = run_cfg.merge({'globals'=>xenoflow_globals})
 
       # some info to be written on the head
