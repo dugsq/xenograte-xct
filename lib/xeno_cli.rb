@@ -9,114 +9,21 @@ require 'fileutils'
 
 module Xeno
   
-  class RunXenode < ::Escort::ActionCommand::Base
-
-
-    def execute
-
-      lib_dir = Xeno::lib_dir
-      
-      # puts "execute options: #{options} arguments: #{arguments}"
-      
-      # puts "lib_dir: #{lib_dir.inspect}"
-      
-      if command_name.to_s.downcase == 'xenode'
-
-        if command_options[:xenode_id_given] && command_options[:xenode_file_given] && command_options[:xenode_klass_given]
-          klass = command_options[:xenode_klass]
-          xenode_id = command_options[:xenode_id]
-          xenode_file = command_options[:xenode_file]
-          
-          xenode ||= {}
-          xenode['klass'] = klass
-          xenode['id']    = xenode_id
-          xenode['path']  = xenode_file
-          
-          # Xeno::write_configs(xenode)
-          
-          puts "Starting Xenode: #{xenode_id}"
-          
-          xenode_pid = Xeno::get_xenode_pid(xenode_id)
-          
-          # don't start it if it is already running
-          unless xenode_pid 
-            # run the xenode
-            exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
-            exec_cmd << "-f #{xenode_file} -k #{klass} "
-            exec_cmd << "-i #{xenode_id.to_s} "
-            exec_cmd << "-d " if @debug
-
-            # pid = fork do
-            #   exec(exec_cmd)
-            # end
-            # 
-            # Process.detach(pid)
-            system("#{exec_cmd} &")
-            
-          end
-
-        end
-
-      end
-
-    end
-
-  end
-
-  class StopXenode < ::Escort::ActionCommand::Base
-
-    def execute
-
-      lib_dir = Xeno::lib_dir
-
-      if command_name.to_s.downcase == 'xenode'
-
-        if command_options[:xenode_id_given]
-          xenode_id = command_options[:xenode_id]
-          # see if pid file exists
-          pid_path = File.expand_path(File.join(lib_dir,'..','run','pids',"#{xenode_id}_pid"))
-          if pid_path && File.exist?(pid_path)
-            # yes the file could disappear before below is called so check again.
-            pid = File.read(pid_path) if File.exist?(pid_path)
-            if pid
-              unless pid.to_s.empty?
-                begin
-                  Process.kill("TERM", pid.to_i)
-                  puts "Xenode #{xenode_id} stopped."
-                rescue Errno::ESRCH
-                end
-              end
-            else
-              puts "Pid file found at: #{pid_path}. But file was empty. (no pid value)"
-            end
-          else
-            puts "Xenode #{xenode_id} already stopped. No pid file found at: #{pid_path}"
-          end
-        end
-
-      end
-
-    end
-
-  end
-
   class RunXenoFlow < ::Escort::ActionCommand::Base
-
     def execute
-    
       begin
         if command_name.to_s.downcase == 'xenoflow'
           if command_options[:xenoflow_file_given] 
 
             xenoflow_id   = command_options[:xenoflow_id]
             xenoflow_file = command_options[:xenoflow_file]
-            xenoflow = Xeno::load_xenoflow(xenoflow_file)
-            # puts "* xenoflow: #{xenoflow.inspect}"
+            xenoflows = Xeno::load_xenoflows_from_file(xenoflow_file)
+            # puts "* xenoflows: #{xenoflows.inspect}"
             
             if xenoflow_id
-              run_xenoflow(xenoflow[xenoflow_id])
+              run_xenoflow(xenoflows[xenoflow_id])
             else
-              xenoflow.each_value do |xflow|
+              xenoflows.each_value do |xflow|
                 run_xenoflow(xflow)
               end
             end
@@ -132,7 +39,6 @@ module Xeno
     end
     
     def run_xenoflow(xenoflow)
-      
       lib_dir = Xeno::lib_dir
       
       if xenoflow
@@ -144,6 +50,10 @@ module Xeno
             xenode_id   = xenode['id']
             xenode_file = xenode['path']
             xenode_class = xenode['klass']
+            
+            # **** pass required field to the record
+            xenode['xenoflow_id'] = xenoflow['id']
+            # xenode['xenoflow_file'] = xenoflow['file']
 
             # get klass nmae if not provided
             unless xenode['klass']
@@ -168,10 +78,11 @@ module Xeno
               end
             end
             #END if
+            # also need to add globals into xenode's config
+            #END get xeno_conf
             
             if xenode_class
-              
-              Xeno::write_configs(xenode)
+              Xeno::write_xenode_config(xenode)
               
               xenode_pid = Xeno::get_xenode_pid(xenode_id)
               # don't start it if it is already running
@@ -182,19 +93,28 @@ module Xeno
                 exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
                 exec_cmd << "-f #{xenode_file} -k #{xenode_class} "
                 exec_cmd << "-i #{xenode_id.to_s} "
-                exec_cmd << "-d " if @debug
+                exec_cmd << "-d " # if @debug
                 exec_cmd << "--redis-host #{xeno_conf[:redis_host]} " if xeno_conf[:redis_host]
                 exec_cmd << "--redis-port #{xeno_conf[:redis_port]} " if xeno_conf[:redis_port]
                 exec_cmd << "--redis-db #{xeno_conf[:redis_db]} " if xeno_conf[:redis_db]
-
-
+                
+                # # no longer use fork
                 # pid = fork do
                 #   exec(exec_cmd)
                 # end
                 # Process.detach(pid)
               
                 system("#{exec_cmd} &")
-            
+                
+                # check pid again
+                sleep(0.5)
+                xenode_pid = Xeno::get_xenode_pid(xenode_id)
+                if xenode_pid
+                  puts "* CLI has confirmed xenode #{xenode_id} (#{xenode_class}) is running in pid: #{xenode_pid}\n"
+                else
+                  puts "* CLI not able to find the pid for #{xenode_id} (#{xenode_class})\n"
+                end
+                
               else
                 puts "* CLI found xenode #{xenode_id} (#{xenode_class}) is already running in pid: #{xenode_pid}\n"  
               end
@@ -205,7 +125,7 @@ module Xeno
           end
           #END each_value
         else
-          puts "xenodes are empty for xenoflow #{xenoflow_id}"
+          puts "xenodes are empty for xenoflow #{xenoflow['id']}"
         end
         #END if
       end
@@ -215,23 +135,21 @@ module Xeno
   end
 
   class StopXenoFlow < ::Escort::ActionCommand::Base
-
     def execute
       lib_dir = Xeno::lib_dir
-      
       begin
         if command_name.to_s.downcase == 'xenoflow'
           if command_options[:xenoflow_file_given] 
 
             xenoflow_id   = command_options[:xenoflow_id]
             xenoflow_file = command_options[:xenoflow_file]
-            xenoflow = Xeno::load_xenoflow(xenoflow_file)
-            # puts "* xenoflow: #{xenoflow.inspect}"
+            xenoflows = Xeno::load_xenoflows_from_file(xenoflow_file)
+            # puts "* xenoflows: #{xenoflows.inspect}"
             
             if xenoflow_id
-              stop_xenoflow(xenoflow[xenoflow_id])
+              stop_xenoflow(xenoflows[xenoflow_id])
             else
-              xenoflow.each_value do |xflow|
+              xenoflows.each_value do |xflow|
                 stop_xenoflow(xflow)
               end
             end
@@ -275,7 +193,7 @@ module Xeno
             # don't start it if it is already running
             if xenode_pid
               puts "* CLI attempt to stop xenode: #{xenode_id} (#{xenode_class})\n"
-          
+
               begin
                 Process.kill("TERM", xenode_pid.to_i)
                 puts "* CLI has stopped xenode #{xenode_id} (#{xenode_class}) in pid: #{xenode_pid}"
@@ -293,59 +211,6 @@ module Xeno
       #END if
     end
     #END stop_xenoflow
-    
-  end
-  
-  class ClearXenoFlow < ::Escort::ActionCommand::Base
-
-    def execute
-      lib_dir = Xeno::lib_dir
-
-      begin
-        if command_name.to_s.downcase == 'xenoflow'
-          if command_options[:xenoflow_file_given] && command_options[:xenoflow_id_given]
-            
-            # get the passed in vars from the CLI
-            xenoflow_id   = command_options[:xenoflow_id]
-            xenoflow_file = command_options[:xenoflow_file]
-            
-            # load the xenoflow from the yaml file
-            xenoflow = Xeno::load_xenoflow(xenoflow_id, xenoflow_file)
-
-            if xenoflow && xenoflow[xenoflow_id]
-              if xenoflow[xenoflow_id]['xenodes']
-                
-                # loop through each xenode in the xenoflow
-                xenoflow[xenoflow_id]['xenodes'].each_value do |xenode|
-                  
-                  # get the xenode_id
-                  xenode_id   = xenode['id']
-                  
-                  # clear the log
-                  log_path = File.expand_path(File.join(lib_dir,'..','log',"#{xenode_id}.log"))
-                  puts "clearing log: #{log_path}"
-                  File.unlink(log_path) if File.exist?(log_path)
-                  puts "Log messages for xenode: #{xenode_id} cleared."
-                  
-                  # clear the runtime configs
-                  run_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'run', 'xenodes', xenode_id))
-                  puts "clearing runtime files in: #{run_cfg_path}"
-                  FileUtils.remove_dir(run_cfg_path, true) if File.exist?(run_cfg_path)
-                  puts "Runtime files cleared for xenode: #{xenode_id}."
-
-                end
-              else
-                puts "xenodes are empty for xenoflow #{xenoflow_id}"
-              end
-            end
-
-          end
-        end
-      rescue Exception => e
-        puts "#{e.inspect} #{e.backtrace}"
-      end
-    end
-
   end
   
   class ClearMessages < ::Escort::ActionCommand::Base
@@ -399,42 +264,7 @@ module Xeno
     end
   end
   
-  class WriteConfig < ::Escort::ActionCommand::Base
-
-    def execute
-      lib_dir = Xeno::lib_dir
-
-      begin
-        if command_name.to_s.downcase == 'config'
-          if command_options[:xenoflow_file_given] && command_options[:xenoflow_id_given]
-
-            xenoflow_id   = command_options[:xenoflow_id]
-            xenoflow_file = command_options[:xenoflow_file]
-            xenoflow = Xeno::load_xenoflow(xenoflow_id, xenoflow_file)
-
-            if xenoflow && xenoflow[xenoflow_id]
-              if xenoflow[xenoflow_id]['xenodes']
-                xenoflow[xenoflow_id]['xenodes'].each_value do |xenode|
-                  xenode_id   = xenode['id']
-                  Xeno::write_configs(xenode)
-                  puts "Writing config for Xenode: #{xenode_id}"
-                end
-              else
-                puts "xenodes are empty for xenoflow #{xenoflow_id}"
-              end
-            end
-
-          end
-        end
-      rescue Exception => e
-        puts "#{e.inspect} #{e.backtrace}"
-      end
-    end
-
-  end
-  
   class WriteMessage < ::Escort::ActionCommand::Base
-
     def execute
       lib_dir = Xeno::lib_dir
 
@@ -503,7 +333,6 @@ module Xeno
   class ClearLogMessages < ::Escort::ActionCommand::Base
     def execute
       begin
-
         lib_dir = Xeno::lib_dir
         
         if command_name.to_s.downcase == 'log'
@@ -532,6 +361,10 @@ module Xeno
     end
   end
   
+  def self.lib_dir
+    Pathname.new(__FILE__).realpath.dirname
+  end
+  
   def self.get_xenode_pid(xenode_id)
     ret_val = nil
     pid_path = File.expand_path(File.join(lib_dir,'..','run','pids',"#{xenode_id}_pid"))
@@ -550,94 +383,6 @@ module Xeno
       end
     end
     ret_val
-  end
-  
-  def self.load_xenoflow(xenoflow_file)
-    ret_val = {}
-    lib_dir = Xeno::lib_dir
-    path = nil
-
-    xenoflows_dir = File.expand_path(File.join(lib_dir,'..','xenoflows'))
-    ext = File.extname(xenoflow_file)
-    xenoflow_file = "#{xenoflow_file}.yml" unless ext && ext.downcase == '.yml'
-    path = File.join(xenoflows_dir, xenoflow_file)
-
-    if path && File.exist?(path)
-      yml = File.read(path)
-      xenoflow = YAML.load(yml) if yml
-      xenoflow.each_pair do |k,v|
-        v['id'] = k
-        v['xenodes'].each_pair do |xk, xv|
-          xv['id'] = xk
-        end
-      end
-      ret_val = xenoflow if xenoflow
-    end
-    
-    ret_val
-  end
-
-  def self.write_configs(xenode)
-    if xenode
-
-      xenode_id   = xenode['id']
-      xenode_file = xenode['path']
-      children = xenode['children']
-
-      # default config
-      default_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'xenode_lib', xenode_file, 'config', 'config.yml'))
-      # run config
-      run_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'run', 'xenodes', xenode_id, 'config', 'config.yml'))
-
-      def_cfg = run_cfg = nil
-      
-      comments = ""
-      comments << "# #{xenode_file}\n"
-      
-      if File.exist?(default_cfg_path)
-        yml = File.read(default_cfg_path)
-        def_cfg = YAML.load(yml) if yml
-      end
-
-      if File.exist?(run_cfg_path)
-        # puts "Config file exists #{run_cfg_path}"
-
-        yml = File.read(run_cfg_path)
-        run_cfg = YAML.load(yml) if yml
-        run_cfg ||= {}
-        run_cfg['children'] = children
-        
-        data_out = YAML.dump(run_cfg)
-        
-        File.open(run_cfg_path, "w") do |f|
-          f.write(comments)
-          f.write(data_out)
-        end
-
-      else
-
-        puts "* CLI creates config file for #{xenode_id} in run directory"
-
-        def_cfg ||= {}
-
-        def_cfg['loop_delay'] = 5.0 unless def_cfg['loop_delay']
-        def_cfg['enabled'] = true unless def_cfg['enabled']
-        def_cfg['debug'] = false unless def_cfg['debug']
-        def_cfg['children'] = children
-
-        # make sure the path exists
-        FileUtils.mkdir_p(File.dirname(run_cfg_path))
-        
-        data_out = YAML.dump(def_cfg)
-        
-        File.open(run_cfg_path, "w") do |f|
-          f.write(comments)
-          f.write(data_out)
-        end
-
-      end
-
-    end
   end
   
   def self.get_xenode_class(xenode_file)
@@ -665,11 +410,133 @@ module Xeno
     ret_val
   end
   
-  
-  def self.lib_dir
-    Pathname.new(__FILE__).realpath.dirname
+  # loading xenoflows from file to hash. 
+  # Also include some extra keys for easy retrieval (like id and file_name) 
+  def self.load_xenoflows_from_file(file_name, plain=false)
+    ret_val = {}
+    lib_dir = Xeno::lib_dir
+    
+    file_ext = File.extname(file_name)
+    file_name = "#{file_name}.yml" unless file_ext && file_ext.downcase == '.yml'
+    file_dir = File.expand_path(File.join(lib_dir,'..','xenoflows'))
+    file_path = File.join(file_dir, file_name)
+    if File.exist?(file_path)
+      hash = YAML.load(File.read(file_path))
+      if hash
+        unless plain
+          # adding extra properties for easy retrieval if NOT plain
+          hash.each_pair do |k,v|
+            v['id'] = k
+            v['file_name'] = file_name
+            v['xenodes'].each_pair do |xk, xv|
+              xv['id'] = xk
+              # also add xenoflow info into xenode
+              xv['xenoflow_file_name'] = file_name
+              xv['xenoflow_id'] = k
+            end
+          end
+        end
+        #END unless
+        # don't symbolized because we use string to get the valuse in other methods
+        # symbolized_hash = Xeno::symbolize_hash_keys(hash)
+        ret_val = hash
+      else
+        puts "* CLI cannot find any xenoflow in file: #{file_path}"
+      end
+    else
+      puts "* CLI cannot find xenoflow file: #{file_path}"
+    end
+    #END if
+
+    ret_val
   end
   
+  # writing xenoflows to a file
+  def self.write_xenoflows_to_file(file_name, hash)
+    lib_dir = Xeno::lib_dir
+    
+    file_ext = File.extname(file_name)
+    file_name = "#{file_name}.yml" unless file_ext && file_ext.downcase == '.yml'
+    file_dir = File.expand_path(File.join(lib_dir,'..','xenoflows'))
+    file_path = File.join(file_dir, file_name)
+    
+    # actual data
+    data_out = YAML.dump(hash)
+
+    File.open(file_path, "w") do |f|
+      f.write(data_out)
+    end
+  end
+
+  # and I need to grab the xenode config from xenoflow file and merge it with the default
+  # if will also return the merged config
+  def self.write_xenode_config(xenode)
+    if xenode
+      
+      # you may ask why not just pass the xenoflow hash directly? 
+      # because the hash does NOT equals to the content in the xenoflow file (there's extra properties like 'id')
+      # it will be easier when we overwrite the xenoflow file with the default xenode config
+      xenoflow_file_name = xenode['xenoflow_file_name']
+      xenoflow_id = xenode['xenoflow_id']
+      
+      xenode_id   = xenode['id']
+      xenode_file = xenode['path']
+      children = xenode['children']
+      
+      # get default config
+      def_cfg = {}
+      def_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'xenode_lib', xenode_file, 'config', 'config.yml'))
+      if File.exist?(def_cfg_path)
+        yml = File.read(def_cfg_path)
+        def_cfg = YAML.load(yml) if yml
+      end
+      
+      # get intance config
+      int_cfg = {}
+      xenoflow_globals = {}
+      xenoflows = Xeno::load_xenoflows_from_file(xenoflow_file_name, true)
+      unless xenoflows.empty?
+        xenoflow_globals = xenoflows[xenoflow_id]['globals']
+        int_cfg = xenoflows[xenoflow_id]['xenodes'][xenode_id]['config'] rescue {}
+      end
+      
+      # write run config
+      run_cfg = {}
+      run_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'run', 'xenodes', xenode_id, 'config', 'config.yml'))
+      
+      def_cfg['loop_delay'] = 5.0 unless def_cfg.has_key?('loop_delay')
+      def_cfg['enabled'] = true unless def_cfg.has_key?('enabled')
+      def_cfg['debug'] = false unless def_cfg.has_key?('debug')
+      run_cfg = def_cfg.merge(int_cfg)
+      
+      # update xenoflow file
+      unless xenoflows.empty?
+        xenoflows[xenoflow_id]['xenodes'][xenode_id]['config'] = run_cfg
+        Xeno::write_xenoflows_to_file(xenoflow_file_name, xenoflows)
+      end
+      
+      run_cfg = run_cfg.merge({'globals'=>xenoflow_globals})
+
+      # some info to be written on the head
+      header_comment = "# #{xenode_file} config written @ #{Time.now}\n"
+      # actual data
+      data_out = YAML.dump(run_cfg)
+      
+      # make sure the path exists
+      FileUtils.mkdir_p(File.dirname(run_cfg_path))
+      
+      File.open(run_cfg_path, "w") do |f|
+        f.write(header_comment)
+        f.write(data_out)
+      end
+      
+      # puts "* CLI has created run config file for #{xenode_id} in run directory"
+    end
+    #END if
+  end
+  #END write_xenode_config
+  
+
   #-------------------------------------------------------------------------------------
   #  helpers
   #-------------------------------------------------------------------------------------
@@ -693,6 +560,7 @@ module Xeno
     end
     ret_val
   end
+  # END text_to_hash
   
   def self.symbolize_hash_keys(hash)
     ret_val = {}
@@ -703,7 +571,5 @@ module Xeno
     ret_val
   end
   # END symbolize_hash_keys
-  
-  
   
 end

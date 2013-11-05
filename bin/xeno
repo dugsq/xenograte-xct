@@ -18,61 +18,33 @@ require File.expand_path(File.join(lib_dir, 'xeno_cli'))
 Escort::App.create do |app|
   
   app.version "0.1.1"
-  app.summary "Xeno CLI"
-  app.description "Xeno Command Line Interface"
+  app.summary "Xenograte CLI"
+  app.description "Xenograte Command Line Interface"
 
   # main run command
   app.command :run, :aliases => :r do |run_cmd|
-    run_cmd.summary "run"
-    run_cmd.description "Run a xenode or a xenoflow"
-
-    # setup run xenode sub command
-    run_cmd.command :xenode do |xenode_cmd|
-      xenode_cmd.summary "xenode"
-      xenode_cmd.description "Run a Xenode"
-
-      # get the xenode sub command options
-      xenode_cmd.options do |opts|
-        opts.opt :xenode_id,     "xenode id",        :short => '-i', :long => '--id',    :type => :string
-        opts.opt :xenode_file,   "xenode file path", :short => '-f', :long => '--file',  :type => :string
-        opts.opt :xenode_klass,  "xenode class",     :short => '-k', :long => '--klass', :type => :string
-      end
-      # call the action to run a xenode
-      xenode_cmd.action do |options, arguments|
-        Xeno::RunXenode.new(options, arguments).execute
-      end
-
-    end
+    run_cmd.summary "run xenoflow command"
+    run_cmd.description "run xenoflow command"
 
     # setup run xenoflow sub command
     run_cmd.command :xenoflow do |xenoflow_cmd|
 
       xenoflow_cmd.options do |opts|
-        opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
         opts.opt :xenoflow_file, "xenoflow file path", :short => '-f', :long => '--file', :type => :string
+        opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
       end
 
       # call the action to run a xenoflow
       xenoflow_cmd.action do |options, arguments|
         Xeno::RunXenoFlow.new(options, arguments).execute
       end
-
     end
-
   end
+  #END command
 
   app.command :stop, :aliases => :s do |stop_cmd|
-    stop_cmd.summary "Stop"
-    stop_cmd.description "Stop a xenode or xenoflow"
-
-    stop_cmd.command :xenode do |xenode_cmd|
-      xenode_cmd.options do |opts|
-        opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
-      end
-      xenode_cmd.action do |options, arguments|
-        Xeno::StopXenode.new(options, arguments).execute
-      end
-    end
+    stop_cmd.summary "stop xenoflow command"
+    stop_cmd.description "stop xenoflow command"
 
     # setup stop xenoflow sub command
     stop_cmd.command :xenoflow do |xenoflow_cmd|
@@ -85,12 +57,12 @@ Escort::App.create do |app|
         Xeno::StopXenoFlow.new(options, arguments).execute
       end
     end
-
   end
-
+  #END command
+  
   app.command :write, :aliases => :w do |write_cmd|
-    write_cmd.summary "Write"
-    write_cmd.description "Write a message to a xenode."
+    write_cmd.summary "write message"
+    write_cmd.description "write a message to a xenode."
 
     write_cmd.command :message do |msg_cmd|
       msg_cmd.options do |opts|
@@ -102,35 +74,18 @@ Escort::App.create do |app|
       end
       msg_cmd.action do |options, arguments|
         Xeno::WriteMessage.new(options, arguments).execute
-      end
-      
-      # setup write configs sub command
-      write_cmd.command :config do |config_cmd|
-
-        config_cmd.options do |opts|
-          opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
-          opts.opt :xenoflow_file, "xenoflow file path", :short => '-f', :long => '--file', :type => :string
-        end
-
-        # call the action to run a xenoflow
-        config_cmd.action do |options, arguments|
-          puts "calling WriteConfig"
-          Xeno::WriteConfig.new(options, arguments).execute
-        end
-      
-      end
-      
+      end      
     end
-
   end
+  #END command
 
   app.command :clear, :aliases => :c do |clear_cmd|
-    clear_cmd.summary "Deletes messages."
-    clear_cmd.description "Deletes queued xenode messages or log files."
+    clear_cmd.summary "clear queued messages OR logs"
+    clear_cmd.description "clear queued messages OR logs"
     
     clear_cmd.command :message do |msg_cmd|
-      msg_cmd.summary "Deletes xenode messages."
-      msg_cmd.description "Deletes all messages for a given xenode ID."
+      msg_cmd.summary "clear messages"
+      msg_cmd.description "clear queued messages"
       
       msg_cmd.options do |opts|
         opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
@@ -141,8 +96,8 @@ Escort::App.create do |app|
     end
     
     clear_cmd.command :log do |log_cmd|
-      log_cmd.summary "Deletes log messages."
-      log_cmd.description "Deletes all log messages for a given xenode ID."
+      log_cmd.summary "clear log"
+      log_cmd.description "clear logs"
       
       log_cmd.options do |opts|
         opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
@@ -164,14 +119,14 @@ Escort::App.create do |app|
         Xeno::ClearXenoFlow.new(options, arguments).execute
       end
     end
-    
   end
-
+  #END command
+  
   app.command :list, :aliases => :l do |list_cmd|
-    list_cmd.summary "List"
-    list_cmd.description "List all messages for a xenode."
+    list_cmd.summary "list queued messages"
+    list_cmd.description "list queued messages"
 
-    list_cmd.command :message do |msg_cmd|
+    list_cmd.command :messages do |msg_cmd|
       msg_cmd.options do |opts|
         opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
       end
@@ -179,7 +134,7 @@ Escort::App.create do |app|
         Xeno::ListMessages.new(options, arguments).execute
       end
     end
-
   end
+  #END command
   
 end

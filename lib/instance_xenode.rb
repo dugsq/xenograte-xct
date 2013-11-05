@@ -392,7 +392,7 @@ class InstanceXenode
       :pid_dir        => pid_dir,
       :config_dir     => config_dir
     }
-
+puts "fjkewgufgwegfyuewyuf #{log_dir.inspect}"
     # make sure the directories exist
     ensure_dirs
 
