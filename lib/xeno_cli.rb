@@ -93,7 +93,7 @@ module Xeno
                 exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
                 exec_cmd << "-f #{xenode_file} -k #{xenode_class} "
                 exec_cmd << "-i #{xenode_id.to_s} "
-                exec_cmd << "-d " # if @debug
+                # exec_cmd << "-d " # if @debug
                 exec_cmd << "--redis-host #{xeno_conf[:redis_host]} " if xeno_conf[:redis_host]
                 exec_cmd << "--redis-port #{xeno_conf[:redis_port]} " if xeno_conf[:redis_port]
                 exec_cmd << "--redis-db #{xeno_conf[:redis_db]} " if xeno_conf[:redis_db]
@@ -490,7 +490,10 @@ module Xeno
         yml = File.read(def_cfg_path)
         def_cfg = YAML.load(yml) if yml
       end
-      
+      def_cfg['loop_delay'] = 5.0 unless def_cfg.has_key?('loop_delay')
+      def_cfg['enabled'] = true unless def_cfg.has_key?('enabled')
+      def_cfg['debug'] = false unless def_cfg.has_key?('debug')
+
       # get intance config
       int_cfg = {}
       xenoflow_globals = {}
@@ -498,18 +501,15 @@ module Xeno
       unless xenoflows.empty?
         xenoflow_globals = xenoflows[xenoflow_id]['globals']
         int_cfg = xenoflows[xenoflow_id]['xenodes'][xenode_id]['config'] rescue {}
+        int_cfg ||= {}
       end
       
       # write run config
       run_cfg = {}
-      run_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'run', 'xenodes', xenode_id, 'config', 'config.yml'))
-      
-      def_cfg['loop_delay'] = 5.0 unless def_cfg.has_key?('loop_delay')
-      def_cfg['enabled'] = true unless def_cfg.has_key?('enabled')
-      def_cfg['debug'] = false unless def_cfg.has_key?('debug')
       run_cfg = def_cfg.merge(int_cfg)
-      
-      # update xenoflow file
+      run_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'run', 'xenodes', xenode_id, 'config', 'config.yml'))
+
+      # update xenoflow file before write run config
       unless xenoflows.empty?
         xenoflows[xenoflow_id]['xenodes'][xenode_id]['config'] = run_cfg
         Xeno::write_xenoflows_to_file(xenoflow_file_name, xenoflows)
