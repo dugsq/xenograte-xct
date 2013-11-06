@@ -120,6 +120,7 @@ class InstanceXenode
         opts[:log] = @log
         opts[:xenode_id] = @xenode_id
         opts[:xenode_config] = load_xenode_config()
+        opts[:config] = opts[:xenode_config][:config]
         opts[:disk_dir] = @dir_set[:disk_dir]
         opts[:redis_conn] = @redis_conn
 
