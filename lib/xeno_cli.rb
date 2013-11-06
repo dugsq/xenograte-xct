@@ -497,9 +497,12 @@ module Xeno
       # get intance config
       int_cfg = {}
       xenoflow_globals = {}
+      xenode_children = {}
       xenoflows = Xeno::load_xenoflows_from_file(xenoflow_file_name, true)
       unless xenoflows.empty?
         xenoflow_globals = xenoflows[xenoflow_id]['globals']
+        xenode_children = xenoflows[xenoflow_id]['xenodes'][xenode_id]['children'] rescue {}
+        xenode_children ||= {}
         int_cfg = xenoflows[xenoflow_id]['xenodes'][xenode_id]['config'] rescue {}
         int_cfg ||= {}
       end
@@ -515,8 +518,11 @@ module Xeno
         Xeno::write_xenoflows_to_file(xenoflow_file_name, xenoflows)
       end
       
-      run_cfg = {'config'=>run_cfg}
-      run_cfg = run_cfg.merge({'globals'=>xenoflow_globals})
+      run_cfg = {
+        'config' => run_cfg
+        'globals' => xenoflow_globals
+        'children' => xenode_children
+      }
 
       # some info to be written on the head
       header_comment = "# #{xenode_file} config written @ #{Time.now}\n"
