@@ -39,8 +39,8 @@ class InstanceXenode
       require File.join(@dir_set[:sys_lib], "xenode_base")
       require File.join(@dir_set[:sys_lib], "xeno_queue")
 
-      xenode_basename = File.basename(@opts[:xenode_file],".rb")
-      require File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'lib', xenode_basename )
+      @xenode_basename = File.basename(@opts[:xenode_file],".rb")
+      require File.join(@dir_set[:xenode_lib_dir], @xenode_basename, 'lib', @xenode_basename )
       
       # setup the log
       set_log()
@@ -247,7 +247,7 @@ class InstanceXenode
 
     # get default config
     def_cfg = {}
-    def_cfg_path = File.expand_path(File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'config','config.yml'))
+    def_cfg_path = File.expand_path(File.join(@dir_set[:xenode_lib_dir], @xenode_basename, 'config','config.yml'))
     if File.exist?(def_cfg_path)
       yml = File.read(def_cfg_path)
       def_cfg = YAML.load(yml) if yml
