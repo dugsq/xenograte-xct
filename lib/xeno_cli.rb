@@ -519,8 +519,8 @@ module Xeno
       end
       
       run_cfg = {
-        'config' => run_cfg
-        'globals' => xenoflow_globals
+        'config' => run_cfg,
+        'globals' => xenoflow_globals,
         'children' => xenode_children
       }
 
