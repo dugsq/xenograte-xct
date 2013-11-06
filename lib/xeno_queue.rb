@@ -12,9 +12,9 @@ module XenoCore
       
       begin
 
-        @log        = opts[:log]
-        @xenode_id  = opts[:xenode_id]
-        @config     = opts[:config]
+        @log            = opts[:log]
+        @xenode_id      = opts[:xenode_id]
+        @xenode_config  = opts[:xenode_config] # it is the whole xenode config, NOT the config key inside it
         
         redis_conn  = opts[:redis_conn]
         
@@ -209,9 +209,9 @@ module XenoCore
           # make sure the config is loaded
           # get_config() if @xenode_config.nil?
 
-          # do_debug("#{mctx} - @xenode_config: #{@config.inspect}")
+          # do_debug("#{mctx} - @xenode_config: #{@xenode_config.inspect}")
 
-          if @config[:children] && @config[:children].include?(to_id)
+          if @xenode_config[:children] && @xenode_config[:children].include?(to_id)
             # its a local xenode
             push_msg(msg_key,"#{to_id}:msgpub", packed)
             # do_debug("#{mctx} - push_msg msg_key: #{msg_key} pub_key: #{to_id}:msgpub", true)
@@ -247,9 +247,9 @@ module XenoCore
     def write_to_children(msg)
       mctx = "#{self.class}.#{__method__}() - [#{@xenode_id}]"
       do_debug("#{mctx} - write_to_children called. msg: #{msg.inspect}", true)
-      do_debug("#{mctx} - @config: #{@config.inspect}",true)
-      if @config && @config[:children]
-         @config[:children].each do |kid_id|
+      do_debug("#{mctx} - @xenode_config: #{@xenode_config.inspect}",true)
+      if @xenode_config && @xenode_config[:children]
+         @xenode_config[:children].each do |kid_id|
           do_debug("#{mctx} - sending msg to #{kid_id} from #{@xenode_id}.", true)
           # send the message
           send_msg(kid_id, msg)
@@ -259,8 +259,8 @@ module XenoCore
 
     def write_to_xenode(xenode_id, msg)
       mctx = "#{self.class}.#{__method__}() - [#{@xenode_id}]"
-      if @config && @config[:children]
-        if xenode_id && @config[:children].include?(xenode_id)
+      if @xenode_config && @xenode_config[:children]
+        if xenode_id && @xenode_config[:children].include?(xenode_id)
           do_debug("#{mctx} - sending message to xenode: #{xenode_id}", true)
           # send_msg will take care of the to from ids and remote kids...
           send_msg(xenode_id, msg)

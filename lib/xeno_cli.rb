@@ -61,25 +61,7 @@ module Xeno
               xenode['klass'] = xenode_class
             end
             
-            # get xeno_conf
-            # may move this to a helper later because we may need this in other commands
-            xeno_conf = {
-              :redis_host => '127.0.0.1',
-              :redis_port => 6379,
-              :redis_db => 0
-            }
-            xeno_conf_file = File.join(lib_dir, '..', 'bin', 'xeno.yml')
-            if File.exist?(xeno_conf_file)
-              hash = YAML.load(File.read(xeno_conf_file))
-              if hash
-                symbolized_hash = Xeno::symbolize_hash_keys(hash)
-                xeno_conf.merge!(symbolized_hash)
-                # puts "* CLI checking xeno_conf: #{xeno_conf.inspect}"
-              end
-            end
-            #END if
-            # also need to add globals into xenode's config
-            #END get xeno_conf
+            xeno_conf = Xeno::get_xeno_conf()
             
             if xenode_class
               Xeno::write_xenode_config(xenode)
@@ -241,7 +223,8 @@ module Xeno
       begin
         if command_name.to_s.downcase == 'message'
           if command_options[:xenode_id_given]
-            redis_port = nil
+            xeno_conf = Xeno::get_xeno_conf()
+            redis_port = xeno_conf[:redis_port]
             rdb = redis_port ? Redis.new(:port => redis_port) : Redis.new
             xenode_id  = command_options[:xenode_id]
             msg_key = "#{xenode_id}:msg"
@@ -363,6 +346,29 @@ module Xeno
   
   def self.lib_dir
     Pathname.new(__FILE__).realpath.dirname
+  end
+  
+  def self.get_xeno_conf
+    lib_dir = Xeno::lib_dir
+    
+    # get xeno_conf
+    # may move this to a helper later because we may need this in other commands
+    xeno_conf = {
+      :redis_host => '127.0.0.1',
+      :redis_port => 6379,
+      :redis_db => 0
+    }
+    xeno_conf_file = File.join(lib_dir, '..', 'bin', 'xeno.yml')
+    if File.exist?(xeno_conf_file)
+      hash = YAML.load(File.read(xeno_conf_file))
+      if hash
+        symbolized_hash = Xeno::symbolize_hash_keys(hash)
+        xeno_conf.merge!(symbolized_hash)
+        # puts "* CLI checking xeno_conf: #{xeno_conf.inspect}"
+      end
+    end
+    #END if
+    xeno_conf
   end
   
   def self.get_xenode_pid(xenode_id)
@@ -518,6 +524,8 @@ module Xeno
         Xeno::write_xenoflows_to_file(xenoflow_file_name, xenoflows)
       end
       
+      # NOTE that there are structure different btw run_cfg and def_cfg
+      # what you defined in def_cfg, it would be equivalent to the value inside the config KEY
       run_cfg = {
         'config' => run_cfg,
         'globals' => xenoflow_globals,

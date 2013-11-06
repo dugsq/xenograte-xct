@@ -42,9 +42,6 @@ class InstanceXenode
       xenode_basename = File.basename(@opts[:xenode_file],".rb")
       require File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'lib', xenode_basename )
       
-      # get this xenode's library config dir for defaults
-      @xenode_default_config_path = File.expand_path(File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'config','config.yml'))
-
       # setup the log
       set_log()
 
@@ -122,12 +119,11 @@ class InstanceXenode
         opts[:log_path]  = @log_path
         opts[:log] = @log
         opts[:xenode_id] = @xenode_id
-        opts[:config] = load_xenode_config()
-        do_debug("#{mctx} - opts[:config]: #{opts[:config].inspect}", true)
+        opts[:xenode_config] = load_xenode_config()
         opts[:disk_dir] = @dir_set[:disk_dir]
         opts[:redis_conn] = @redis_conn
 
-        @loop_delay = opts[:config][:loop_delay] if opts[:config] && opts[:config][:loop_delay]
+        @loop_delay = opts[:xenode_config][:loop_delay] if opts[:xenode_config] && opts[:xenode_config][:loop_delay]
         @loop_delay ||= 0.5
 
         @dir_set = nil
@@ -243,51 +239,42 @@ class InstanceXenode
     options
 
   end
-
+  
+  # this will load xenode's config in run directory
+  # NOTE that it will return xenode_config, NOT just the config key inside it 
   def load_xenode_config
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
 
-    # set the default return value
-    ret_val = {}
-
-    # init the default_data
-    default_data = nil
-
-
-    # see if the default config file for the xenode type exists
-    if File.exist?(@xenode_default_config_path)
-      # read the raw yaml
-      yml = File.read(@xenode_default_config_path)
-      # turn raw yml into ruby hash
-      default_data = YAML.load(yml) if yml
-      default_data = symbolize_hash_keys(default_data)
+    # get default config
+    def_cfg = {}
+    def_cfg_path = File.expand_path(File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'config','config.yml'))
+    if File.exist?(def_cfg_path)
+      yml = File.read(def_cfg_path)
+      def_cfg = YAML.load(yml) if yml
+      def_cfg = symbolize_hash_keys(def_cfg)
     end
-
-    # override defaults with instance's config if it exists
-    fp = File.join(@dir_set[:config_dir],'config.yml')
-    do_debug("#{mctx} - instance config path: #{fp.inspect}", true)
-    # see if the file exists
-    if File.exist?(fp)
-      # read the raw yaml
-      yml = File.read(fp)
-      # turn raw yml into ruby hash
-      yml_data = YAML.load(yml) if yml
-      cfg_data = symbolize_hash_keys(yml_data)
-
-      # set ret_val to cfg_data from instance's config
-      ret_val = cfg_data if cfg_data
-      # merge the hashes overwriting the defaults
-      ret_val = default_data.merge(cfg_data) if default_data
+    def_cfg['loop_delay'] = 5.0 unless def_cfg.has_key?('loop_delay')
+    def_cfg['enabled'] = true unless def_cfg.has_key?('enabled')
+    def_cfg['debug'] = false unless def_cfg.has_key?('debug')
+    
+    # get run config ** NOTE that run_cfg's structure is DIFFERENT than def_cfg
+    run_cfg = {}
+    run_cfg_path = File.join(@dir_set[:config_dir],'config.yml')
+    # if run config exist, merge it from default config
+    if File.exist?(run_cfg_path)
+      yml = File.read(run_cfg_path)
+      run_cfg = YAML.load(yml) if yml
+      run_cfg = symbolize_hash_keys(run_cfg)
+      run_cfg[:config] = def_cfg.merge(run_cfg)
+    # if NOT exist, add default config and write it do run directory
     else
-      # set ret_val to default_data since there is no instance config file
-      ret_val = default_data if default_data
-      # write config from default
-      default_data ||= {debug: false}
-      hash = stringify_hash_keys(default_data)
-      lock_write(fp, YAML.dump(hash))
+      run_cfg[:config] = def_cfg.merge(run_cfg)
+      hash = stringify_hash_keys(run_cfg)
+      lock_write(run_cfg_path, YAML.dump(hash))
     end
-    do_debug("#{mctx} - merged config: #{ret_val.inspect}", true)
-    ret_val
+    
+    do_debug("#{mctx} - xenode_config: #{run_cfg.inspect}", true)
+    run_cfg
   end
 
   def process_options(opts)
