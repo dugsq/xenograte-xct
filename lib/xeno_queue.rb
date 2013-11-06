@@ -14,7 +14,7 @@ module XenoCore
 
         @log        = opts[:log]
         @xenode_id  = opts[:xenode_id]
-        @config     = opts[:xenode_config]
+        @config     = opts[:config]
         
         redis_conn  = opts[:redis_conn]
         

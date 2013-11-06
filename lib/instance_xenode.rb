@@ -41,9 +41,9 @@ class InstanceXenode
 
       xenode_basename = File.basename(@opts[:xenode_file],".rb")
       require File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'lib', xenode_basename )
-
+      
       # get this xenode's library config dir for defaults
-      @xenode_default_config = File.expand_path(File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'config','config.yml'))
+      @xenode_default_config_path = File.expand_path(File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'config','config.yml'))
 
       # setup the log
       set_log()
@@ -82,7 +82,7 @@ class InstanceXenode
 
   def spawn_xenode
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-
+    
     # raise an error if the xenode is already running
     raise RuntimeError, "#{mctx} - Xenode: is already running." if xenode_running?
 
@@ -112,82 +112,86 @@ class InstanceXenode
     end
 
     @xenode_obj = nil
+    
+    begin
+      # fire up the EM loop
+      EM.run do
 
-    # fire up the EM loop
-    EM.run do
+        # pass-in usefull options
+        opts = {}
+        opts[:log_path]  = @log_path
+        opts[:log] = @log
+        opts[:xenode_id] = @xenode_id
+        opts[:config] = load_xenode_config()
+        do_debug("#{mctx} - opts[:config]: #{opts[:config].inspect}", true)
+        opts[:disk_dir] = @dir_set[:disk_dir]
+        opts[:redis_conn] = @redis_conn
 
-      # pass-in usefull options
-      opts = {}
-      opts[:log_path]  = @log_path
-      opts[:log] = @log
-      opts[:xenode_id] = @xenode_id
-      opts[:xenode_config] = load_xenode_config
-      opts[:disk_dir] = @dir_set[:disk_dir]
-      opts[:redis_conn] = @redis_conn
+        @loop_delay = opts[:config][:loop_delay] if opts[:config] && opts[:config][:loop_delay]
+        @loop_delay ||= 0.5
 
-      @loop_delay = opts[:xenode_config][:loop_delay] if opts[:xenode_config] && opts[:xenode_config][:loop_delay]
-      @loop_delay ||= 0.5
+        @dir_set = nil
 
-      @dir_set = nil
+        # create the xenode
+        @xenode_obj = Object.const_get(@xenode_class).new(opts)
 
-      # create the xenode
-      @xenode_obj = Object.const_get(@xenode_class).new(opts)
+        # create the xenode_queue object
+        @xenode_queue = XenoCore::XenoQueue.new(opts)
 
-      # create the xenode_queue object
-      @xenode_queue = XenoCore::XenoQueue.new(opts)
-
-      # add the write_to_children method to the xenode class with callback
-      @xenode_obj.on_message do |msg|
-        do_debug("#{mctx} - calling #{@xenode_id}.write_to_children msg: #{msg.inspect}")
-        @xenode_queue.write_to_children(msg)
-      end
-
-      # add write to xenode method to the xenode class with callback
-      @xenode_obj.on_write_to_xenode do |to_xenode_id, msg|
-        do_debug("#{mctx} - calling #{@xenode_id}.write_to_xenode to_xenode_id: #{to_xenode_id} msg: #{msg.inspect}")
-        @xenode_queue.write_to_xenode(to_xenode_id, msg)
-      end
-
-      # call Xenode's process_message() with xenode_queue
-      @xenode_queue.on_message do |msg|
-        do_debug("#{mctx} - calling process_message msg: #{msg.inspect}")
-        # send orig msg to xenode's process_message
-        @xenode_obj.process_message(msg)
-      end
-
-      # call xenode's startup() method
-      do_debug("#{mctx} - calling startup on xenode.", true)
-      # don't pass in options here as options are already passed in xenode constructor
-      # @xenode_obj.startup({:log => @log})
-      @xenode_obj.startup()
-
-      # capture the signal so we can die nice
-      [:QUIT, :TERM, :INT].each do |sig|
-        trap(sig) do
-          @shutdown = true
+        # add the write_to_children method to the xenode class with callback
+        @xenode_obj.on_message do |msg|
+          do_debug("#{mctx} - calling #{@xenode_id}.write_to_children msg: #{msg.inspect}")
+          @xenode_queue.write_to_children(msg)
         end
-      end
 
-      # call xenode's process() method periodically based on loop_delay value if it is defined
-      if defined?(@xenode_obj.process)
-        EM.add_periodic_timer(@loop_delay) do
-          do_debug("#{mctx} process called.")
-          @xenode_obj.process
+        # add write to xenode method to the xenode class with callback
+        @xenode_obj.on_write_to_xenode do |to_xenode_id, msg|
+          do_debug("#{mctx} - calling #{@xenode_id}.write_to_xenode to_xenode_id: #{to_xenode_id} msg: #{msg.inspect}")
+          @xenode_queue.write_to_xenode(to_xenode_id, msg)
         end
-      end
 
-      # add periodic timer to check to see if we need to shut down
-      EM.add_periodic_timer(0.5) do
-        if @shutdown
-          # call the shutdown on the xenode so it can clean up
-          @xenode_obj.shutdown()
-          # end the eventmachine loop
-          EM.stop
+        # call Xenode's process_message() with xenode_queue
+        @xenode_queue.on_message do |msg|
+          do_debug("#{mctx} - calling process_message msg: #{msg.inspect}")
+          # send orig msg to xenode's process_message
+          @xenode_obj.process_message(msg)
         end
-      end
 
-    end # EM.run
+        # call xenode's startup() method
+        do_debug("#{mctx} - calling startup on xenode.", true)
+        # don't pass in options here as options are already passed in xenode constructor
+        # @xenode_obj.startup({:log => @log})
+        @xenode_obj.startup()
 
+        # capture the signal so we can die nice
+        [:QUIT, :TERM, :INT].each do |sig|
+          trap(sig) do
+            @shutdown = true
+          end
+        end
+
+        # call xenode's process() method periodically based on loop_delay value if it is defined
+        if defined?(@xenode_obj.process)
+          EM.add_periodic_timer(@loop_delay) do
+            do_debug("#{mctx} process called.")
+            @xenode_obj.process
+          end
+        end
+
+        # add periodic timer to check to see if we need to shut down
+        EM.add_periodic_timer(0.5) do
+          if @shutdown
+            # call the shutdown on the xenode so it can clean up
+            @xenode_obj.shutdown()
+            # end the eventmachine loop
+            EM.stop
+          end
+        end
+
+      end # EM.run
+    rescue Exception => e
+      catch_error("#{mctx} - ERROR #{e.inspect} #{e.backtrace}")
+    end
   end
 
   def opts_parse(args)
@@ -249,12 +253,11 @@ class InstanceXenode
     # init the default_data
     default_data = nil
 
-    do_debug("#{mctx} - @xenode_default_config: #{@xenode_default_config.inspect}")
 
     # see if the default config file for the xenode type exists
-    if File.exist?(@xenode_default_config)
+    if File.exist?(@xenode_default_config_path)
       # read the raw yaml
-      yml = File.read(@xenode_default_config)
+      yml = File.read(@xenode_default_config_path)
       # turn raw yml into ruby hash
       default_data = YAML.load(yml) if yml
       default_data = symbolize_hash_keys(default_data)
@@ -283,7 +286,7 @@ class InstanceXenode
       hash = stringify_hash_keys(default_data)
       lock_write(fp, YAML.dump(hash))
     end
-
+    do_debug("#{mctx} - merged config: #{ret_val.inspect}", true)
     ret_val
   end
 
