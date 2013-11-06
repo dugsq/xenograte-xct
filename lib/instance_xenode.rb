@@ -253,9 +253,9 @@ class InstanceXenode
       def_cfg = YAML.load(yml) if yml
       def_cfg = symbolize_hash_keys(def_cfg)
     end
-    def_cfg['loop_delay'] = 5.0 unless def_cfg.has_key?('loop_delay')
-    def_cfg['enabled'] = true unless def_cfg.has_key?('enabled')
-    def_cfg['debug'] = false unless def_cfg.has_key?('debug')
+    def_cfg[:loop_delay] = 5.0 unless def_cfg.has_key?(:loop_delay)
+    def_cfg[:enabled] = true unless def_cfg.has_key?(:enabled)
+    def_cfg[:debug] = false unless def_cfg.has_key?(:debug)
     
     # get run config ** NOTE that run_cfg's structure is DIFFERENT than def_cfg
     run_cfg = {}
