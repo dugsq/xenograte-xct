@@ -68,10 +68,5 @@ class EstimateArrivalNode
         end
       end
     end
-    
   end
-
 end
-
-  
-  

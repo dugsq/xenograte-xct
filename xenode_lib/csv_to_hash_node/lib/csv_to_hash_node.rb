@@ -25,11 +25,17 @@ class CsvToHashNode
     @has_header = true
     
     # row delimeter defaults to newline "\n"
+<<<<<<< HEAD
     @row_delim = @config.fetch(:row_delim, "\n")
     
     # field or column delimeter defaults to a comma
     @col_delim = @config.fetch(:col_delim, ",")
 
+=======
+    @default_row_delim = "\n"
+    # field or column delimeter defaults to a comma
+    @default_col_delim = ','
+>>>>>>> bf604b4c9fe5749920a091c5b92391e2d7584639
   end
   
   # Processes incoming messages provided by the runtime.
@@ -49,8 +55,19 @@ class CsvToHashNode
       if msg
         @log.debug("#{mctx} - got message: #{msg.inspect}", true) if @debug
         if msg.context 
-          @row_delim = msg.context[:row_delim] if msg.context[:row_delim]
-          @col_delim = msg.context[:col_delim] if msg.context[:col_delim]
+          if msg.context[:row_delim]
+            @row_delim = msg.context[:row_delim]
+          else
+            @row_delim = @default_row_delim
+          end
+          if msg.context[:col_delim]
+            @col_delim = msg.context[:col_delim] 
+          else
+            @col_delim = @default_col_delim
+          end
+        else
+          @row_delim = @default_row_delim
+          @col_delim = @default_col_delim
         end
         data = parse_csv(msg.data)
         if data && data.length > 0
