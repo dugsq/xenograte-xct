@@ -265,10 +265,10 @@ class InstanceXenode
       yml = File.read(run_cfg_path)
       run_cfg = YAML.load(yml) if yml
       run_cfg = symbolize_hash_keys(run_cfg)
-      run_cfg[:config] = def_cfg.merge(run_cfg)
+      run_cfg[:config] = def_cfg.merge(run_cfg[:config])
     # if NOT exist, add default config and write it do run directory
     else
-      run_cfg[:config] = def_cfg.merge(run_cfg)
+      run_cfg[:config] = def_cfg.merge(run_cfg[:config])
       hash = stringify_hash_keys(run_cfg)
       lock_write(run_cfg_path, YAML.dump(hash))
     end
