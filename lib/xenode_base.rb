@@ -17,7 +17,7 @@ module XenoCore
         @xenode_id   = opts[:xenode_id]
         @disk_dir    = opts[:disk_dir]
         @log_path    = opts[:log_path]
-        @tmp_dir     = opts[:config][:tmp_dir] if opts[:config]
+        @tmp_dir     = opts[:tmp_dir]
         @config      = opts[:config]
         @debug       = opts[:config][:debug] if opts[:config]
         @loop_delay  = opts.fetch(:loop_delay, 5.0)
@@ -90,7 +90,7 @@ module XenoCore
     
     def resolve_sys_dir(fp)
       if fp
-        do_debug("@disk_dir: #{@disk_dir.inspect} @tmp_dir: #{@tmp_dir}")
+        do_debug("@disk_dir: #{@disk_dir.inspect} @tmp_dir: #{@tmp_dir}", true)
         fp.gsub!("@this_node", @disk_dir) if fp.include?("@this_node") && @disk_dir
         fp.gsub!("@this_server", @tmp_dir) if fp.include?("@this_server") && @tmp_dir
       end

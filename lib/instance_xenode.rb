@@ -44,7 +44,10 @@ class InstanceXenode
       
       # setup the log
       set_log()
-
+      
+      # dir_set
+      do_debug("#{mctx} - @dir_set: #{@dir_set.inspect}", true)
+      
       do_debug("#{mctx} - xenode_class: #{@xenode_class.inspect}")
 
       # # show the info to console
@@ -122,69 +125,79 @@ class InstanceXenode
         opts[:xenode_config] = load_xenode_config()
         opts[:config] = opts[:xenode_config][:config]
         opts[:disk_dir] = @dir_set[:disk_dir]
+        opts[:tmp_dir] = @dir_set[:tmp_dir]
         opts[:redis_conn] = @redis_conn
+        
+        # check if xenode is enabled
+        if opts[:config] && opts[:config][:enabled]
+        
+          @loop_delay = opts[:xenode_config][:loop_delay] if opts[:xenode_config] && opts[:xenode_config][:loop_delay]
+          @loop_delay ||= 0.5
 
-        @loop_delay = opts[:xenode_config][:loop_delay] if opts[:xenode_config] && opts[:xenode_config][:loop_delay]
-        @loop_delay ||= 0.5
+          @dir_set = nil
 
-        @dir_set = nil
+          # create the xenode
+          @xenode_obj = Object.const_get(@xenode_class).new(opts)
 
-        # create the xenode
-        @xenode_obj = Object.const_get(@xenode_class).new(opts)
+          # create the xenode_queue object
+          @xenode_queue = XenoCore::XenoQueue.new(opts)
 
-        # create the xenode_queue object
-        @xenode_queue = XenoCore::XenoQueue.new(opts)
-
-        # add the write_to_children method to the xenode class with callback
-        @xenode_obj.on_message do |msg|
-          do_debug("#{mctx} - calling #{@xenode_id}.write_to_children msg: #{msg.inspect}")
-          @xenode_queue.write_to_children(msg)
-        end
-
-        # add write to xenode method to the xenode class with callback
-        @xenode_obj.on_write_to_xenode do |to_xenode_id, msg|
-          do_debug("#{mctx} - calling #{@xenode_id}.write_to_xenode to_xenode_id: #{to_xenode_id} msg: #{msg.inspect}")
-          @xenode_queue.write_to_xenode(to_xenode_id, msg)
-        end
-
-        # call Xenode's process_message() with xenode_queue
-        @xenode_queue.on_message do |msg|
-          do_debug("#{mctx} - calling process_message msg: #{msg.inspect}")
-          # send orig msg to xenode's process_message
-          @xenode_obj.process_message(msg)
-        end
-
-        # call xenode's startup() method
-        do_debug("#{mctx} - calling startup on xenode.", true)
-        # don't pass in options here as options are already passed in xenode constructor
-        # @xenode_obj.startup({:log => @log})
-        @xenode_obj.startup()
-
-        # capture the signal so we can die nice
-        [:QUIT, :TERM, :INT].each do |sig|
-          trap(sig) do
-            @shutdown = true
+          # add the write_to_children method to the xenode class with callback
+          @xenode_obj.on_message do |msg|
+            do_debug("#{mctx} - calling #{@xenode_id}.write_to_children msg: #{msg.inspect}")
+            @xenode_queue.write_to_children(msg)
           end
-        end
 
-        # call xenode's process() method periodically based on loop_delay value if it is defined
-        if defined?(@xenode_obj.process)
-          EM.add_periodic_timer(@loop_delay) do
-            do_debug("#{mctx} process called.")
-            @xenode_obj.process
+          # add write to xenode method to the xenode class with callback
+          @xenode_obj.on_write_to_xenode do |to_xenode_id, msg|
+            do_debug("#{mctx} - calling #{@xenode_id}.write_to_xenode to_xenode_id: #{to_xenode_id} msg: #{msg.inspect}")
+            @xenode_queue.write_to_xenode(to_xenode_id, msg)
           end
-        end
 
-        # add periodic timer to check to see if we need to shut down
-        EM.add_periodic_timer(0.5) do
-          if @shutdown
-            # call the shutdown on the xenode so it can clean up
-            @xenode_obj.shutdown()
-            # end the eventmachine loop
-            EM.stop
+          # call Xenode's process_message() with xenode_queue
+          @xenode_queue.on_message do |msg|
+            do_debug("#{mctx} - calling process_message msg: #{msg.inspect}")
+            # send orig msg to xenode's process_message
+            @xenode_obj.process_message(msg)
           end
-        end
 
+          # call xenode's startup() method
+          do_debug("#{mctx} - calling startup on xenode.", true)
+          # don't pass in options here as options are already passed in xenode constructor
+          # @xenode_obj.startup({:log => @log})
+          @xenode_obj.startup()
+
+          # capture the signal so we can die nice
+          [:QUIT, :TERM, :INT].each do |sig|
+            trap(sig) do
+              @shutdown = true
+            end
+          end
+
+          # call xenode's process() method periodically based on loop_delay value if it is defined
+          if defined?(@xenode_obj.process)
+            EM.add_periodic_timer(@loop_delay) do
+              do_debug("#{mctx} process called.")
+              @xenode_obj.process
+            end
+          end
+
+          # add periodic timer to check to see if we need to shut down
+          EM.add_periodic_timer(0.5) do
+            if @shutdown
+              # call the shutdown on the xenode so it can clean up
+              @xenode_obj.shutdown()
+              # end the eventmachine loop
+              EM.stop
+            end
+          end
+          
+        else
+          catch_error("#{mctx} - ERROR Xenode is not enabled.")
+          # end the eventmachine loop
+          EM.stop
+        end
+        
       end # EM.run
     rescue Exception => e
       catch_error("#{mctx} - ERROR #{e.inspect} #{e.backtrace}")
@@ -347,7 +360,8 @@ class InstanceXenode
 
   # set directory paths
   def set_dirs
-
+    mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
+    
     # this file is in the lib dir so capture the full path
     sys_lib = File.expand_path(File.dirname(__FILE__))
 
@@ -383,7 +397,7 @@ class InstanceXenode
       :pid_dir        => pid_dir,
       :config_dir     => config_dir
     }
-
+    
     # make sure the directories exist
     ensure_dirs
 
