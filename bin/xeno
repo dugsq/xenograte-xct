@@ -23,12 +23,11 @@ Escort::App.create do |app|
 
   # main run command
   app.command :run, :aliases => :r do |run_cmd|
-    run_cmd.summary "run xenoflow command"
-    run_cmd.description "run xenoflow command"
+    run_cmd.summary "run command"
 
     # setup run xenoflow sub command
     run_cmd.command :xenoflow do |xenoflow_cmd|
-
+      xenoflow_cmd.summary "run XenoFlow(s) from a XenoFlow YAML file"
       xenoflow_cmd.options do |opts|
         opts.opt :xenoflow_file, "xenoflow file path", :short => '-f', :long => '--file', :type => :string
         opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
@@ -48,6 +47,7 @@ Escort::App.create do |app|
 
     # setup stop xenoflow sub command
     stop_cmd.command :xenoflow do |xenoflow_cmd|
+      xenoflow_cmd.summary "stop XenoFlow(s) from a XenoFlow YAML file"
       xenoflow_cmd.options do |opts|
         opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
         opts.opt :xenoflow_file, "xenoflow file path", :short => '-f', :long => '--file', :type => :string
@@ -61,16 +61,15 @@ Escort::App.create do |app|
   #END command
   
   app.command :write, :aliases => :w do |write_cmd|
-    write_cmd.summary "write message"
-    write_cmd.description "write a message to a xenode."
+    write_cmd.summary "write command"
 
     write_cmd.command :message do |msg_cmd|
+      write_cmd.summary "write a message to a Xenode instance"
       msg_cmd.options do |opts|
         opts.opt :xenode_id,  "xenode id",   :short => '-i', :long => '--id',      :type => :string
-        opts.opt :redis_port, "redis port",  :short => '-p', :long => '--port',    :type => :string
         opts.opt :data,       "data",        :short => '-d', :long => '--data',    :type => :string
         opts.opt :context,    "context",     :short => '-c', :long => '--context', :type => :string
-        opts.opt :msg_file,       "file",        :short => '-f', :long => '--file',    :type => :string
+        opts.opt :msg_file,       "file",    :short => '-f', :long => '--file',    :type => :string
       end
       msg_cmd.action do |options, arguments|
         Xeno::WriteMessage.new(options, arguments).execute
@@ -78,55 +77,12 @@ Escort::App.create do |app|
     end
   end
   #END command
-
-  app.command :clear, :aliases => :c do |clear_cmd|
-    clear_cmd.summary "clear queued messages OR logs"
-    clear_cmd.description "clear queued messages OR logs"
-    
-    clear_cmd.command :message do |msg_cmd|
-      msg_cmd.summary "clear messages"
-      msg_cmd.description "clear queued messages"
-      
-      msg_cmd.options do |opts|
-        opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
-      end
-      msg_cmd.action do |options, arguments|
-        Xeno::ClearMessages.new(options, arguments).execute
-      end
-    end
-    
-    clear_cmd.command :log do |log_cmd|
-      log_cmd.summary "clear log"
-      log_cmd.description "clear logs"
-      
-      log_cmd.options do |opts|
-        opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
-      end
-      log_cmd.action do |options, arguments|
-        Xeno::ClearLogMessages.new(options, arguments).execute
-      end
-    end
-    
-    clear_cmd.command :xenoflow do |clear_xenoflow_cmd|
-      clear_xenoflow_cmd.summary "Deletes logs and runtime files for a XenoFlow."
-      clear_xenoflow_cmd.description "This will remove all log messages and runtime files for all xenodes in a xenoflow."
-      
-      clear_xenoflow_cmd.options do |opts|
-        opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
-        opts.opt :xenoflow_file, "xenoflow file path", :short => '-f', :long => '--file', :type => :string
-      end
-      clear_xenoflow_cmd.action do |options, arguments|
-        Xeno::ClearXenoFlow.new(options, arguments).execute
-      end
-    end
-  end
-  #END command
   
   app.command :list, :aliases => :l do |list_cmd|
-    list_cmd.summary "list queued messages"
-    list_cmd.description "list queued messages"
+    list_cmd.summary "list command"
 
     list_cmd.command :messages do |msg_cmd|
+      list_cmd.summary "list queued messages of a Xenode instance"
       msg_cmd.options do |opts|
         opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
       end
@@ -136,5 +92,45 @@ Escort::App.create do |app|
     end
   end
   #END command
+
+  app.command :clear, :aliases => :c do |clear_cmd|
+    clear_cmd.summary "clear command"
+    
+    clear_cmd.command :messages do |msg_cmd|
+      msg_cmd.summary "clear queued messages for a Xenode instance"      
+      msg_cmd.options do |opts|
+        opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
+      end
+      msg_cmd.action do |options, arguments|
+        Xeno::ClearMessages.new(options, arguments).execute
+      end
+    end
+    
+    clear_cmd.command :log do |log_cmd|
+      log_cmd.summary "clear log for a Xenode instance"      
+      log_cmd.options do |opts|
+        opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
+      end
+      log_cmd.action do |options, arguments|
+        Xeno::ClearLog.new(options, arguments).execute
+      end
+    end
+    
+    # clear_cmd.command :xenoflow do |clear_xenoflow_cmd|
+    #   clear_xenoflow_cmd.summary "Deletes logs and runtime files for a XenoFlow."
+    #   clear_xenoflow_cmd.description "This will remove all log messages and runtime files for all xenodes in a xenoflow."
+    #   
+    #   clear_xenoflow_cmd.options do |opts|
+    #     opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
+    #     opts.opt :xenoflow_file, "xenoflow file path", :short => '-f', :long => '--file', :type => :string
+    #   end
+    #   clear_xenoflow_cmd.action do |options, arguments|
+    #     Xeno::ClearXenoFlow.new(options, arguments).execute
+    #   end
+    # end
+  end
+  #END command
+  
+
   
 end

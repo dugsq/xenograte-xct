@@ -115,7 +115,8 @@ module Xeno
     end
     #END run_xenoflow
   end
-
+  #END class
+  
   class StopXenoFlow < ::Escort::ActionCommand::Base
     def execute
       lib_dir = Xeno::lib_dir
@@ -194,58 +195,7 @@ module Xeno
     end
     #END stop_xenoflow
   end
-  
-  class ClearMessages < ::Escort::ActionCommand::Base
-    def execute
-      begin
-        if command_name.to_s.downcase == 'message'
-          if command_options[:xenode_id_given]
-            redis_port = nil
-            rdb = redis_port ? Redis.new(:port => redis_port) : Redis.new
-            xenode_id  = command_options[:xenode_id]
-            msg_key = "#{xenode_id}:msg"
-            rdb.del(msg_key)
-            puts "messages for xenode: #{xenode_id} cleared."
-          end
-        end
-      rescue Exception => e
-        puts "#{e.inspect} #{e.backtrace}"
-      end
-    end
-  end
-
-  class ListMessages < ::Escort::ActionCommand::Base
-    def execute
-      lib_dir = Xeno::lib_dir
-
-      require File.join(lib_dir,"xeno_message")
-
-      begin
-        if command_name.to_s.downcase == 'message'
-          if command_options[:xenode_id_given]
-            xeno_conf = Xeno::get_xeno_conf()
-            redis_port = xeno_conf[:redis_port]
-            rdb = redis_port ? Redis.new(:port => redis_port) : Redis.new
-            xenode_id  = command_options[:xenode_id]
-            msg_key = "#{xenode_id}:msg"
-            msgs = rdb.lrange(msg_key, 0, -1)
-            if msgs
-              puts
-              puts "Messages for Xenode: #{xenode_id}"
-              puts "-------------------------------------------"
-              msgs.each do |m|
-                m = XenoCore::Message.new.load(m)
-                puts m.to_hash
-              end
-              puts
-            end
-          end
-        end
-      rescue Exception => e
-        puts "#{e.inspect} #{e.backtrace}"
-      end
-    end
-  end
+  #END class
   
   class WriteMessage < ::Escort::ActionCommand::Base
     def execute
@@ -258,7 +208,7 @@ module Xeno
 
           if command_options[:xenode_id_given]
 
-            data = context = redis_port = nil
+            data = context = nil
 
             xenode_id  = command_options[:xenode_id]
 
@@ -290,9 +240,10 @@ module Xeno
               context_hash = Xeno::text_to_hash(context)
               xmsg.context = context_hash ? context_hash : context
             end
-
-            redis_port = command_options[:redis_port] if command_options[:redis_port]
-
+            
+            # get Redis instance
+            xeno_conf = Xeno::get_xeno_conf()
+            redis_port = xeno_conf[:redis_port]
             rdb = redis_port ? Redis.new(:port => redis_port) : Redis.new
 
             msg_key = "#{xenode_id}:msg"
@@ -300,9 +251,10 @@ module Xeno
 
             rdb.lpush(msg_key, xmsg.pack)
             rdb.publish(pub_key, msg_key)
-
-            puts "Message written to #{xenode_id}"
-
+            
+            puts
+            puts "* CLI has written a message to Xenode: #{xenode_id}"
+            puts
           end
         end
       rescue Exception => e
@@ -312,29 +264,38 @@ module Xeno
     end
 
   end
-
-  class ClearLogMessages < ::Escort::ActionCommand::Base
+  #END class
+  
+  class ListMessages < ::Escort::ActionCommand::Base
     def execute
+      lib_dir = Xeno::lib_dir
+
+      require File.join(lib_dir,"xeno_message")
+
       begin
-        lib_dir = Xeno::lib_dir
-        
-        if command_name.to_s.downcase == 'log'
+        if command_name.to_s.downcase == 'messages'
           if command_options[:xenode_id_given]
-            xenode_id = command_options[:xenode_id]
-            log_path = File.expand_path(File.join(lib_dir,'..','log',"#{xenode_id}.log"))
-            puts "clearing log: #{log_path}"
-            File.unlink(log_path) if File.exist?(log_path)
-            puts "Log messages for xenode: #{xenode_id} cleared."
-          else
-            puts "*WARNING* This will clear all logs. Do you want to proceed? [y/n]:"
-            user_input = STDIN.gets.chomp
-            if user_input[0] == "Y" || user_input[0] == "y"
-              log_path = File.expand_path(File.join(lib_dir,'..','log',"*.log"))
-              puts "clearing log: #{log_path}"
-              FileUtils.rm Dir.glob(log_path)
-              puts "All log messages cleared."
-            else
-              puts "Cancelled clearing all log messages."
+            
+            # get Redis instance
+            xeno_conf = Xeno::get_xeno_conf()
+            redis_port = xeno_conf[:redis_port]
+            rdb = redis_port ? Redis.new(:port => redis_port) : Redis.new
+            
+            xenode_id  = command_options[:xenode_id]
+            msg_key = "#{xenode_id}:msg"
+            msgs = rdb.lrange(msg_key, 0, -1)
+            if msgs
+              puts
+              puts "* CLI listing queued messages for Xenode: #{xenode_id}..."
+              puts
+              msgs.each do |m|
+                m = XenoCore::Message.new.load(m)
+                puts m.to_hash
+              end
+              puts
+              puts "* CLI has found #{msgs.size} queued messages for Xenode: #{xenode_id}"
+              puts "  Redis: #{rdb.inspect}"
+              puts
             end
           end
         end
@@ -343,6 +304,74 @@ module Xeno
       end
     end
   end
+  #END class
+  
+  class ClearMessages < ::Escort::ActionCommand::Base
+    def execute
+      begin
+        if command_name.to_s.downcase == 'messages'
+          if command_options[:xenode_id_given]
+            
+            # get Redis instance
+            xeno_conf = Xeno::get_xeno_conf()
+            redis_port = xeno_conf[:redis_port]
+            rdb = redis_port ? Redis.new(:port => redis_port) : Redis.new
+            
+            xenode_id  = command_options[:xenode_id]
+            msg_key = "#{xenode_id}:msg"
+            msgs = rdb.lrange(msg_key, 0, -1)
+            rdb.del(msg_key)
+            puts
+            puts "* CLI has cleared #{msgs.size} queued messages for Xenode: #{xenode_id}"
+            puts "  Redis: #{rdb.inspect}"
+            puts
+          end
+        end
+      rescue Exception => e
+        puts "#{e.inspect} #{e.backtrace}"
+      end
+    end
+    #END execute
+  end
+  #END class
+  
+  class ClearLog < ::Escort::ActionCommand::Base
+    def execute
+      begin
+        lib_dir = Xeno::lib_dir
+        
+        if command_name.to_s.downcase == 'log'
+          if command_options[:xenode_id_given]
+            xenode_id = command_options[:xenode_id]
+            log_path = File.expand_path(File.join(lib_dir,'..','run','xenodes',"#{xenode_id}",'log',"xn_#{xenode_id}.log"))
+            puts "* CLI attempt to clear log for: #{xenode_id}"
+            if File.exist?(log_path)
+              File.unlink(log_path) 
+              puts "* CLI has cleared the log for xenode: #{xenode_id}"
+            else
+              puts "* CLI unable to find the log for xenode: #{xenode_id}"
+            end
+          else
+            # # NOT able to do this now because log is located seperately under each Xenode's run folder
+            # # need to go through every Xenode's run dir to make this works again
+            # puts "*WARNING* This will clear all logs. Do you want to proceed? [y/n]:"
+            # user_input = STDIN.gets.chomp
+            # if user_input[0] == "Y" || user_input[0] == "y"
+            #   log_path = File.expand_path(File.join(lib_dir,'..','log',"*.log"))
+            #   puts "clearing log: #{log_path}"
+            #   FileUtils.rm Dir.glob(log_path)
+            #   puts "CLI has cleared all the logs under /run"
+            # else
+            #   puts "CLI has cancelled the action."
+            # end
+          end
+        end
+      rescue Exception => e
+        puts "#{e.inspect} #{e.backtrace}"
+      end
+    end
+  end
+  #END class
   
   def self.lib_dir
     Pathname.new(__FILE__).realpath.dirname
