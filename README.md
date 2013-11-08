@@ -8,23 +8,6 @@ flow of data shared among them, on one server or across multiple servers.
 resources to build, test, and debug those worker processes, in [Ruby](http://www.ruby-lang.org/en/), on a 
 single machine. You can then weave these worker processes together into powerful integrations and automations.
 
-### Environment
-* Tested on Mac OS X and Ubuntu
-* Currently does NOT support Windows
-
-### Prerequisites
-
-* Redis 2.6 or newer http://redis.io/topics/quickstart
-* Ruby 2.0 or newer http://www.ruby-lang.org/en/downloads/
-* It is also recommended to install RVM with a Ruby https://rvm.io/
-
-### To Install:
-
-1. [Fork the repo](https://help.github.com/articles/fork-a-repo).
-2. Change directory to the downloaded xenograte-xct project root.
-3. make sure ruby gem 'bundler' is installed by using `gem list`. If it's not in the list, do a `gem install bundler` http://gembundler.com/
-4. install required ruby gems by running `bundle install`
-
 ## Quick Start
 
 1. [**Getting Started**](../../wiki/Getting-started)
