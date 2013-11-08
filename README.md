@@ -27,8 +27,9 @@ single machine. You can then weave these worker processes together into powerful
 
 ## Quick Start
 
-1. [**Building a Xenode**](../../wiki/Building-a-Xenode)
-2. [**Building a XenoFlow**](../../wiki/Building-a-Xenoflow)
+1. [**Getting Started**](../../wiki/Getting-started)
+2. [**Building a Xenode**](../../wiki/Building-a-Xenode)
+3. [**Building a XenoFlow**](../../wiki/Building-a-Xenoflow)
 4. [**Command-line Interface (CLI) Usage**](../../wiki/Command-Line-Interface-Usage)
 
 **Please refer to the [Wiki](../../wiki) for complete list of resources**
