@@ -27,79 +27,11 @@ single machine. You can then weave these worker processes together into powerful
 
 ## Quick Start
 
-#### in Xenograte, we call a worker process a *Xenode*
-There are basically three types of worker processes (Xenodes). The first produces data and does not read messages (producer). The second that will read and write messages (producer/consumer), and the third that just reads messages (consumer).
-Any xenode can be one of these three types. It just depends on what methods you implement in your Xenode.
-
-A simple producer/consumer Xenode can look like the following:
-```ruby
-class EchoNode
-  include XenoCore::NodeBase
-  def process_message(msg)
-    write_to_children(msg)
-  end
-end
-```
-The above is an echo Xenode. All it does is write the received message to its children.
-
-```ruby
-class HelloWorldNode
-  include XenoCore::NodeBase
-  def process()
-    msg = XenoCore::Message.new
-    msg.data = "hello world"
-    write_to_children(msg)
-  end
-end
-```
-The above is a "Hello World" Xenode as a producer example. It will write a message to its children every 1.5 seconds when the loop_delay value is set to 1.5. The message will have the value of "hello world" in its data.
-
-```ruby
-class DataWriterNode
-  include XenoCore::NodeBase
-  def process_message(msg)
-    File.open(msg.context[:filename], 'w') do |f|
-      f.write(msg.data)
-    end
-  end
-end
-```
-The above is a data writer Xenode. It looks at the inbound message's context for file_name to which to write the data. As a consumer it does not write messages to any children as it is a terminus node.
-
-#### in Xenograte, we call an orchestration of the worker processes a XenoFlow
-
-A XenoFlow is just a YAML file that defines the way a message flows between Xenodes.
-
-In this XenoFlow, Xenode `n1` has one child `n2`, and `n2` has no child. 
-
-```yaml
----
-xflow1:
-  id: xflow1
-  xenodes:
-    n1:
-      id: n1
-      klass: EchoNode
-      path: echo_node
-      children:
-      - n2
-    n2:
-      id: n2
-      klass: EchoNode
-      path: echo_node
-      children: []
-```
-When you [run the above XenoFlow](../../wiki/Command-Line-Interface-Usage#binxeno-run-xenoflow-run-a-xenoflow), whenever `n1` [receives a message](../../wiki/Command-Line-Interface-Usage#binxeno-write-message-write-a-message-to-a-xenode), `n1` will send the message to `n2`. 
-
-## Digging Deeper
-
-Please refer to the [Wiki](../../wiki) for more in-depth knowledge on the following topics:
-
-1. [**Xenode:** the worker process](../../wiki/Xenode)
-2. [**XenoFlow:** orchestration of the worker processes](../../wiki/Xenoflow)
-3. [**XenoMessage:** the messages flow between worker process](../../wiki/XenoMessage)
+1. [**Building a Xenode**](../../wiki/Building-a-Xenode)
+2. [**Building a XenoFlow**](../../wiki/Building-a-Xenoflow)
 4. [**Command-line Interface (CLI) Usage**](../../wiki/Command-Line-Interface-Usage)
 
+**Please refer to the [Wiki](../../wiki) for complete list of resources**
 
 ## Community
 
