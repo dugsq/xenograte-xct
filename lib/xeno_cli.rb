@@ -494,11 +494,11 @@ module Xeno
       def_cfg_path = File.expand_path(File.join(Xeno::lib_dir, '..', 'xenode_lib', xenode_file, 'config', 'config.yml'))
       if File.exist?(def_cfg_path)
         yml = File.read(def_cfg_path)
-        def_cfg = YAML.load(yml) if yml
+        def_cfg = YAML.load(yml) unless yml.to_s.empty?
       end
-      def_cfg['loop_delay'] = 5.0 unless def_cfg.has_key?('loop_delay')
-      def_cfg['enabled'] = true unless def_cfg.has_key?('enabled')
-      def_cfg['debug'] = false unless def_cfg.has_key?('debug')
+      def_cfg['loop_delay'] ||= 5.0 
+      def_cfg['enabled'] ||= true 
+      def_cfg['debug'] ||= false 
 
       # get intance config
       int_cfg = {}
