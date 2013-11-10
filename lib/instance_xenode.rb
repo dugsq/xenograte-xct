@@ -46,7 +46,7 @@ class InstanceXenode
       set_log()
       
       # dir_set
-      do_debug("#{mctx} - @dir_set: #{@dir_set.inspect}", true)
+      do_debug("#{mctx} - @dir_set: #{@dir_set.inspect}")
       
       do_debug("#{mctx} - xenode_class: #{@xenode_class.inspect}")
 
@@ -287,7 +287,7 @@ class InstanceXenode
       lock_write(run_cfg_path, YAML.dump(hash))
     end
     
-    do_debug("#{mctx} - xenode_config: #{run_cfg.inspect}", true)
+    do_debug("#{mctx} - xenode_config: #{run_cfg.inspect}")
     run_cfg
   end
 
@@ -442,18 +442,20 @@ class InstanceXenode
 
   def symbolize_hash_keys(hash)
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
+    ret_val = {}
     begin
-      ret_val = {}
+      
       if hash
         hash.each_pair do |k,v|
           v = symbolize_hash_keys(v) if v.is_a?(Hash)
           ret_val[k.to_sym] = v
         end
       end
-      ret_val
+      
     rescue Exception => e
       @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
     end
+    ret_val
   end
 
   def stringify_hash_keys(hash)

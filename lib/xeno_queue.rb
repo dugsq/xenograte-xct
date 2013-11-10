@@ -78,7 +78,7 @@ module XenoCore
           else
             
             @rdb.rpop(@msg_key).callback do |msg_in|
-              do_debug("#{mctx} - rpop callback msg_in: #{msg_in.inspect}", true)
+              do_debug("#{mctx} - rpop callback msg_in: #{msg_in.inspect}")
               if msg_in
                 do_debug("#{mctx} - calling @msg_callback()")
                 msg = XenoCore::Message.new().load(msg_in)

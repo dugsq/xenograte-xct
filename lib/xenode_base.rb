@@ -90,7 +90,7 @@ module XenoCore
     
     def resolve_sys_dir(fp)
       if fp
-        do_debug("@disk_dir: #{@disk_dir.inspect} @tmp_dir: #{@tmp_dir}", true)
+        do_debug("@disk_dir: #{@disk_dir.inspect} @tmp_dir: #{@tmp_dir}")
         fp.gsub!("@this_node", @disk_dir) if fp.include?("@this_node") && @disk_dir
         fp.gsub!("@this_server", @tmp_dir) if fp.include?("@this_server") && @tmp_dir
       end
