@@ -2,8 +2,9 @@
 
 This is where you save the Xenode.
 
-You can also download the already made Xenode from the following list: (alphabetical order)
-The categorization of the Xenodes is still in progress. You may see change in arrangement over time.
+You can also download the already made Xenode from the following list: 
+
+(The categorization of the Xenodes is still in progress. You may see change in arrangement over time.)
 
 * Email
  * [gmail-sender-xenode](https://github.com/Nodally/gmail-sender-xenode)
