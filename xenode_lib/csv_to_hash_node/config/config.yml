@@ -1,7 +1,0 @@
----
-loop_delay: 0.5
-enabled: true
-debug: false
-header: true
-row_delim: "\n"
-col_delim: ","

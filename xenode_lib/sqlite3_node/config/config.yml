@@ -1,9 +1,0 @@
----
-loop_delay: 5
-enabled: true
-debug: true
-sql_template: xenode_lib/sqlite3_node/templates/insert_shipping.tmp
-db_path: databases/Shipping.db
-pass_through: true
-rel_path: true
-

@@ -1,8 +1,0 @@
----
-loop_delay: 5.0
-enabled: true
-debug: false
-dir_path: data_out
-file_mask: "%Y%m%d%H%M%S%3N"
-rel_path: true
-file_name: out.txt
