@@ -18,7 +18,7 @@ You can also download the already made Xenode from the following list:
  * [echo-xenode](https://github.com/Nodally/echo-xenode)
  * [single-message-xenode](https://github.com/Nodally/single-message-xenode)
 * Mobile
-* [sms-sender-xenode](https://github.com/Nodally/sms-sender-xenode)
+  * [sms-sender-xenode](https://github.com/Nodally/sms-sender-xenode)
 * Web
  * [rss-feed-xenode](https://github.com/Nodally/rss-feed-xenode)
  * [twitter-search-xenode](https://github.com/Nodally/file-writer-xenode)
