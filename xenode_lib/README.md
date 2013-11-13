@@ -1,10 +1,10 @@
 ## Xenode Library
 
-This is where you save the Xenode.
+This is where you put the Xenodes you want to use.
 
 You can also download the already made Xenode from the following list: 
 
-(Categorization is still in progress, you may see change in arrangement over time.)
+(categorization is still in progress, you may see change in arrangement over time.)
 
 * Email
   * [gmail-sender-xenode](https://github.com/Nodally/gmail-sender-xenode)
