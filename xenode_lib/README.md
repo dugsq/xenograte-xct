@@ -6,8 +6,14 @@ You can also download the already made Xenode from the following list:
 
 (categorization is still in progress, you may see change in arrangement over time.)
 
+* Converter
+  * csv-to-hash-xenode
+  * hash-to-csv-xenode
+* Database
+  * sqlite3_node
 * Email
   * [gmail-sender-xenode](https://github.com/Nodally/gmail-sender-xenode)
+  * gmail-reader-xenode
 * File
   * [dropbox-writer-xenode](https://github.com/Nodally/dropbox-writer-xenode)
   * [dropbox-reader-xenode](https://github.com/Nodally/dropbox-reader-xenode)

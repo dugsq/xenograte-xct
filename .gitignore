@@ -19,3 +19,7 @@ run/
 .yardoc
 _yardoc
 doc/
+
+# Ignore everything in xenode_lib except README
+xenode_lib/*
+!xenode_lib/README.md
