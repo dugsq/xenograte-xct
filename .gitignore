@@ -20,6 +20,11 @@ run/
 _yardoc
 doc/
 
-# Ignore everything in xenode_lib except README
+# Ignore everything in /xenode_lib except README
 xenode_lib/*
 !xenode_lib/README.md
+
+# Ignore everything in /xenoflows except README and example_xenoflow
+xenoflows/*
+!xenoflows/README.md
+!xenoflows/example_xenoflow.yml
