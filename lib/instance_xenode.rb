@@ -131,9 +131,9 @@ class InstanceXenode
         # check if xenode is enabled
         if opts[:config] && opts[:config][:enabled]
         
-          @loop_delay = opts[:xenode_config][:loop_delay] if opts[:xenode_config] && opts[:xenode_config][:loop_delay]
-          @loop_delay ||= 0.5
-
+          @loop_delay = opts[:config][:loop_delay] if opts[:config] && opts[:config][:loop_delay]
+          @loop_delay ||= 5.0
+          
           @dir_set = nil
 
           # create the xenode

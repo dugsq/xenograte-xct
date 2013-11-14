@@ -106,6 +106,16 @@ Escort::App.create do |app|
       end
     end
     
+    clear_cmd.command :config do |config_cmd|
+      config_cmd.summary "clear run (cached) config for one or all Xenode instances"      
+      config_cmd.options do |opts|
+        opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
+      end
+      config_cmd.action do |options, arguments|
+        Xeno::ClearRunConfig.new(options, arguments).execute
+      end
+    end
+    
     clear_cmd.command :log do |log_cmd|
       log_cmd.summary "clear log for a Xenode instance"      
       log_cmd.options do |opts|

@@ -14,7 +14,7 @@ module Xeno
       begin
         if command_name.to_s.downcase == 'xenoflow'
           if command_options[:xenoflow_file_given] 
-
+            
             xenoflow_id   = command_options[:xenoflow_id]
             xenoflow_file = command_options[:xenoflow_file]
             xenoflows = Xeno::load_xenoflows_from_file(xenoflow_file)
@@ -64,11 +64,13 @@ module Xeno
             xeno_conf = Xeno::get_xeno_conf()
             
             if xenode_class
-              Xeno::write_xenode_config(xenode)
-              
               xenode_pid = Xeno::get_xenode_pid(xenode_id)
               # don't start it if it is already running
               unless xenode_pid
+                # to make sure config gets updated properly
+                Xeno::ClearRunConfig.clear_xenode_run_config(xenode_id)
+                Xeno::write_xenode_config(xenode)
+                
                 puts "* CLI attempt to run xenode: #{xenode_id} (#{xenode_class})\n"
               
                 # run the xenode
@@ -335,41 +337,87 @@ module Xeno
   end
   #END class
   
-  class ClearLog < ::Escort::ActionCommand::Base
+  class ClearRunConfig < ::Escort::ActionCommand::Base
     def execute
       begin
         lib_dir = Xeno::lib_dir
         
+        if command_options[:xenode_id_given]
+          xenode_id = command_options[:xenode_id]
+          ClearRunConfig.clear_xenode_run_config(xenode_id)
+        else
+          ClearRunConfig.clear_xenodes_run_config()
+        end
+        
+      rescue Exception => e
+        puts "#{e.inspect} #{e.backtrace}"
+      end
+    end
+    
+    def self.clear_xenodes_run_config
+      lib_dir = Xeno::lib_dir
+      xenodes_dir_path = File.expand_path(File.join(lib_dir,'..','run','xenodes'))
+      Dir.entries(xenodes_dir_path).each do |f|
+        # ignore current and parent
+        next if f == "." || f == ".." || f == ".DS_Store"
+        xenode_id = f
+        self.clear_xenode_run_config(xenode_id)
+      end
+    end
+    
+    def self.clear_xenode_run_config(xenode_id)
+      lib_dir = Xeno::lib_dir
+      config_path = File.expand_path(File.join(lib_dir,'..','run','xenodes',"#{xenode_id}",'config',"config.yml"))
+
+      if File.exist?(config_path)
+        File.unlink(config_path) 
+        # puts "* CLI has cleared the run (cached) config for xenode: #{xenode_id}"
+      else
+        # puts "* CLI unable to find the run (cached) config for xenode: #{xenode_id}"
+      end
+    end
+  end
+  
+  class ClearLog < ::Escort::ActionCommand::Base
+    def execute
+      begin
+        lib_dir = Xeno::lib_dir
         if command_name.to_s.downcase == 'log'
           if command_options[:xenode_id_given]
             xenode_id = command_options[:xenode_id]
-            log_path = File.expand_path(File.join(lib_dir,'..','run','xenodes',"#{xenode_id}",'log',"xn_#{xenode_id}.log"))
-            puts "* CLI attempt to clear log for: #{xenode_id}"
-            if File.exist?(log_path)
-              File.unlink(log_path) 
-              puts "* CLI has cleared the log for xenode: #{xenode_id}"
-            else
-              puts "* CLI unable to find the log for xenode: #{xenode_id}"
-            end
+            ClearLog.clear_xenode_log(xenode_id)
           else
-            # # NOT able to do this now because log is located seperately under each Xenode's run folder
-            # # need to go through every Xenode's run dir to make this works again
-            # puts "*WARNING* This will clear all logs. Do you want to proceed? [y/n]:"
-            # user_input = STDIN.gets.chomp
-            # if user_input[0] == "Y" || user_input[0] == "y"
-            #   log_path = File.expand_path(File.join(lib_dir,'..','log',"*.log"))
-            #   puts "clearing log: #{log_path}"
-            #   FileUtils.rm Dir.glob(log_path)
-            #   puts "CLI has cleared all the logs under /run"
-            # else
-            #   puts "CLI has cancelled the action."
-            # end
+            ClearLog.clear_xenodes_log()
           end
         end
       rescue Exception => e
         puts "#{e.inspect} #{e.backtrace}"
       end
     end
+  
+    def self.clear_xenodes_log
+      lib_dir = Xeno::lib_dir
+      xenodes_dir_path = File.expand_path(File.join(lib_dir,'..','run','xenodes'))
+      Dir.entries(xenodes_dir_path).each do |f|
+        # ignore current and parent
+        next if f == "." || f == ".." || f == ".DS_Store"
+        xenode_id = f
+        self.clear_xenode_log(xenode_id)
+      end
+    end
+    
+    def self.clear_xenode_log(xenode_id)
+      lib_dir = Xeno::lib_dir
+      log_path = File.expand_path(File.join(lib_dir,'..','run','xenodes',"#{xenode_id}",'log',"xn_#{xenode_id}.log"))
+
+      if File.exist?(log_path)
+        File.unlink(log_path) 
+        puts "* CLI has cleared the logg for xenode: #{xenode_id}"
+      else
+        puts "* CLI found log for xenode: #{xenode_id} is already deleted"
+      end
+    end
+    
   end
   #END class
   
@@ -526,8 +574,8 @@ module Xeno
         def_cfg = YAML.load(yml) unless yml.to_s.empty?
       end
       def_cfg['loop_delay'] ||= 5.0 
-      def_cfg['enabled'] ||= true 
-      def_cfg['debug'] ||= false 
+      def_cfg['enabled'] = true unless def_cfg['enabled'] == false
+      def_cfg['debug'] = false unless def_cfg['debug'] == true
 
       # get intance config
       int_cfg = {}
