@@ -59,16 +59,33 @@ class InstanceXenode
       # see if redis server is running
       rpid = `ps -e -o pid -o comm | grep [r]edis-server`
       if rpid.to_s.empty?
-        emsg = "\n#{mctx} - Xenode stopped: Redis server is not running.\nrun 'redis-server &' to start Redis first"
+        emsg = "#{mctx} - Xenode stopped: Redis server is not running.\nrun 'redis-server &' to start Redis first"
         warn emsg
         catch_error(emsg)
         exit!
       end
       
       # run the xenode
-      do_debug("\n#{mctx} - spawning xenode: #{@xenode_id} with options: #{opts.inspect}", true)
+      do_debug("#{mctx} - prepare to spawning xenode: #{@xenode_id} with options: #{opts.inspect}", true)
       
+    # # load error (could be missing gem)
+    # rescue LoadError => e
+    #   do_debug("wfugewuygfyugeyuw")
+    #   
+    # other errors
     rescue Exception => e
+      
+      # if it's an load error, add some extra message
+      if e.is_a?(LoadError)
+        # get the mssing file (gem) name
+        missing_file = e.message.split("cannot load such file -- ")
+        missing_file.delete_if(&:empty?)
+        missing_file = missing_file.join("")
+        msg = "ERROR: Unable to load #{missing_file.inspect}, if it's a gem please make sure it's installed properly."
+        puts msg
+        # return
+      end
+      
       emsg = "#{e.inspect} #{e.backtrace}"
       if @log
         @log.error(emsg)
@@ -81,7 +98,7 @@ class InstanceXenode
   end
 
   def spawn_xenode
-    mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
+    mctx = "#{self.class}.#{__method__}"
     
     # raise an error if the xenode is already running
     raise RuntimeError, "#{mctx} - Xenode: is already running." if xenode_running?
@@ -342,6 +359,14 @@ class InstanceXenode
   def set_log
     @log_path = File.join(@dir_set[:log_dir],"xn_#{@xenode_id}.log")
     @log = Logger.new @log_path
+    
+    # @log.datetime_format = "%Y-%m-%d %H:%M:%S"
+    @log.datetime_format = "%Y-%m-%d"
+    # Here you can format the heading part of each log statement  
+    @log.formatter = proc do |severity, datetime, progname, msg|
+      "#{severity} [#{datetime.strftime('%Y-%m-%d %H:%M:%S.%6N')} ##{Process.pid}]: #{msg}\n"
+    end
+    
     @log.level = Logger::DEBUG
   end
 

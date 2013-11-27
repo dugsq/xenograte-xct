@@ -21,14 +21,15 @@ module Xeno
             # puts "* xenoflows: #{xenoflows.inspect}"
             
             if xenoflow_id
-              run_xenoflow(xenoflows[xenoflow_id])
+              RunXenoFlow.run_xenoflow(xenoflows[xenoflow_id])
             else
               xenoflows.each_value do |xflow|
-                run_xenoflow(xflow)
+                RunXenoFlow.run_xenoflow(xflow)
               end
             end
           else
-            puts "Error: You must supply a xenoflow file name."
+            RunXenoFlow.run_xenoflows()
+            # puts "Error: You must supply a xenoflow file name."
           end
           #END if
         end
@@ -38,11 +39,79 @@ module Xeno
       end
     end
     
-    def run_xenoflow(xenoflow)
+    def self.run_xenoflows()
+      lib_dir = Xeno::lib_dir
+      xenoflows_dir_path = File.expand_path(File.join(lib_dir,'..','xenoflows'))
+      
+      xenodes = {} # used to check if there's duplicate Xenode id
+      xenoflows = [] # used to run xenoflow (could be duplicate id for XenoFlow, but we don't care)
+      cancel = false # check if no duplicate Xenode is found
+      
+      Dir.entries(xenoflows_dir_path).each do |f|
+        # ignore current and parent and none-YAML
+        next if f == "." || f == ".." || f == ".DS_Store"
+        next if File.extname(f) != ".yml"
+        
+        xenoflow_file_name = f
+        xenoflow_file_xenoflows = Xeno::load_xenoflows_from_file(xenoflow_file_name)
+        
+        # getting ALL the xenodes to check if there's duplicate ID
+        xenoflow_file_xenoflows.each_pair do |xf_id, xf|
+          xenoflows << xf
+          xf['xenodes'].each_pair  do |xn_id, xn|
+            # if there's repeating id
+            if xenodes.has_key?("#{xn_id}")
+              
+              puts "* CLI cancel the run action because it find duplicate Xenodes instance id:\n"
+              puts "  - Xenode: #{xn_id} in XenoFlow: #{xenodes["#{xn_id}"]["xenoflow_id"]} of file: #{xenodes["#{xn_id}"]["xenoflow_file_name"]}"
+              puts "  - Xenode: #{xn_id} in XenoFlow: #{xf_id} of file: #{xenoflow_file_name}"
+              puts "  Please provide them a unique instance id and try run again."
+              cancel = true
+              break
+              
+            # NO repeating id, just save it into the hash
+            else
+              xenodes["#{xn_id}"] = xn
+              xenodes["#{xn_id}"]["xenoflow_id"] = xf_id
+              xenodes["#{xn_id}"]["xenoflow_file_name"] = xenoflow_file_name
+            end
+            #END if
+          end
+          #END each_pair
+        end
+        #END each_pair
+      end
+      #END each
+      
+      # puts "wegfiueguifw:\n#{xenodes.keys.join("\n")}"
+      
+      unless cancel
+        xenoflows.each do |xf|
+          RunXenoFlow.run_xenoflow(xf)
+        end
+        
+        # check pid again
+        success = 0
+        sleep(0.5)
+        xenodes.each_pair do |xn_id, xn|
+          xenode_pid = Xeno::get_xenode_pid(xn_id)
+          if xenode_pid
+            success += 1
+          end
+        end
+        puts "* CLI has successfully running #{success} Xenodes out of #{xenodes.size}; Found #{xenodes.size - success} having errors."
+        
+      end
+      #END unless
+      
+      # self.run_xenoflow(xenoflow)
+    end
+    
+    def self.run_xenoflow(xenoflow)
       lib_dir = Xeno::lib_dir
       
       if xenoflow
-        puts "* CLI attempt to run xenoflow: #{xenoflow['id']}"
+        puts "* CLI attempt to run XenoFlow: #{xenoflow['id']}"
         if xenoflow['xenodes']
           xenoflow['xenodes'].each_value do |xenode|
             
@@ -63,6 +132,10 @@ module Xeno
             
             xeno_conf = Xeno::get_xeno_conf()
             
+            if xeno_conf[:new_log_everytime]
+              ClearLog.clear_xenode_log(xenode_id)
+            end
+            
             if xenode_class
               xenode_pid = Xeno::get_xenode_pid(xenode_id)
               # don't start it if it is already running
@@ -71,8 +144,8 @@ module Xeno
                 Xeno::ClearRunConfig.clear_xenode_run_config(xenode_id)
                 Xeno::write_xenode_config(xenode)
                 
-                puts "* CLI attempt to run xenode: #{xenode_id} (#{xenode_class})\n"
-              
+                puts "* CLI attempt to run Xenode: #{xenode_id} (#{xenode_class})\n"
+                
                 # run the xenode
                 exec_cmd = "ruby -I #{lib_dir} -- #{lib_dir}/instance_xenode.rb "
                 exec_cmd << "-f #{xenode_file} -k #{xenode_class} "
@@ -87,29 +160,30 @@ module Xeno
                 #   exec(exec_cmd)
                 # end
                 # Process.detach(pid)
-              
+                
+                # putting rescue here does not seems work
                 system("#{exec_cmd} &")
                 
                 # check pid again
                 sleep(0.5)
                 xenode_pid = Xeno::get_xenode_pid(xenode_id)
                 if xenode_pid
-                  puts "* CLI has confirmed xenode #{xenode_id} (#{xenode_class}) is running in pid: #{xenode_pid}\n"
+                  puts "* CLI has confirmed Xenode #{xenode_id} (#{xenode_class}) is running in pid: #{xenode_pid}\n"
                 else
                   puts "* CLI not able to find the pid for #{xenode_id} (#{xenode_class})\n"
                 end
                 
               else
-                puts "* CLI found xenode #{xenode_id} (#{xenode_class}) is already running in pid: #{xenode_pid}\n"  
+                puts "* CLI found Xenode #{xenode_id} (#{xenode_class}) is already running in pid: #{xenode_pid}\n"  
               end
             else
-              puts "* CLI cannot find the class in xenode file: #{xenode_file}\n\n"
+              puts "* CLI cannot find the class in Xenode file: #{xenode_file}\n\n"
             end
             #END if
           end
           #END each_value
         else
-          puts "xenodes are empty for xenoflow #{xenoflow['id']}"
+          puts "* CLI found the value of 'xenodes' are empty for XenoFlow: #{xenoflow['id']}"
         end
         #END if
       end
@@ -132,14 +206,15 @@ module Xeno
             # puts "* xenoflows: #{xenoflows.inspect}"
             
             if xenoflow_id
-              stop_xenoflow(xenoflows[xenoflow_id])
+              StopXenoFlow.stop_xenoflow(xenoflows[xenoflow_id])
             else
               xenoflows.each_value do |xflow|
-                stop_xenoflow(xflow)
+                StopXenoFlow.stop_xenoflow(xflow)
               end
             end
           else
-            puts "Error: You must supply a xenoflow file name."
+            StopXenoFlow.stop_xenoflows()
+            # puts "Error: You must supply a xenoflow file name."
           end
           #END if
         end
@@ -150,7 +225,29 @@ module Xeno
       
     end
     
-    def stop_xenoflow(xenoflow)
+    def self.stop_xenoflows()
+      lib_dir = Xeno::lib_dir
+      xenoflows_dir_path = File.expand_path(File.join(lib_dir,'..','xenoflows'))
+
+      Dir.entries(xenoflows_dir_path).each do |f|
+        # ignore current and parent and none-YAML
+        next if f == "." || f == ".." || f == ".DS_Store"
+        next if File.extname(f) != ".yml"
+        
+        xenoflow_file_name = f
+        xenoflow_file_xenoflows = Xeno::load_xenoflows_from_file(xenoflow_file_name)
+        
+        # getting ALL the xenodes to check if there's duplicate ID
+        xenoflow_file_xenoflows.each_pair do |xf_id, xf|
+          StopXenoFlow.stop_xenoflow(xf)          
+        end
+        #END each_pair
+      end
+      #END each
+    end
+    #END stop_xenoflows
+    
+    def self.stop_xenoflow(xenoflow)
       lib_dir = Xeno::lib_dir
       
       if xenoflow
@@ -412,14 +509,40 @@ module Xeno
 
       if File.exist?(log_path)
         File.unlink(log_path) 
-        puts "* CLI has cleared the logg for xenode: #{xenode_id}"
+        puts "* CLI has cleared the log for Xenode: #{xenode_id}"
       else
-        puts "* CLI found log for xenode: #{xenode_id} is already deleted"
+        puts "* CLI found log for Xenode: #{xenode_id} is already deleted"
       end
     end
     
   end
   #END class
+  
+  class ClearRuntime < ::Escort::ActionCommand::Base
+    def execute
+      begin
+        lib_dir = Xeno::lib_dir
+        runtime_dir_path = File.expand_path(File.join(lib_dir,'..','run'))
+        if Dir.exists?(runtime_dir_path)
+          Dir.entries(runtime_dir_path).each do |f|
+            # ignore current and parent and pids
+            next if f == "." || f == ".." || f == ".DS_Store"
+            next if f == "pids"
+            dir_path = File.expand_path(File.join(runtime_dir_path,"#{f}"))
+            FileUtils.rm_rf(dir_path)
+          end
+          puts "* CLI has cleared everything in /run"
+        else
+          puts "* CLI found /run is already removed."
+        end
+                
+      rescue Exception => e
+        puts "#{e.inspect} #{e.backtrace}"
+      end
+    end
+  end
+  #END class
+  
   
   def self.lib_dir
     Pathname.new(__FILE__).realpath.dirname
@@ -433,7 +556,8 @@ module Xeno
     xeno_conf = {
       :redis_host => '127.0.0.1',
       :redis_port => 6379,
-      :redis_db => 0
+      :redis_db => 0,
+      :new_log_everytime => true
     }
     xeno_conf_file = File.join(lib_dir, '..', 'bin', 'xeno.yml')
     if File.exist?(xeno_conf_file)
@@ -511,23 +635,37 @@ module Xeno
           hash.each_pair do |k,v|
             v['id'] = k
             v['file_name'] = file_name
-            v['xenodes'].each_pair do |xk, xv|
-              xv['id'] = xk
-              # also add xenoflow info into xenode
-              xv['xenoflow_file_name'] = file_name
-              xv['xenoflow_id'] = k
+            begin
+              v['xenodes'].each_pair do |xk, xv|
+                xv['id'] = xk
+                # also add xenoflow info into xenode
+                xv['xenoflow_file_name'] = file_name
+                xv['xenoflow_id'] = k
+              end
+            rescue Exception => e
+              if e.message == "undefined method `each_pair' for nil:NilClass"
+                puts "* CLI cancel the action, key 'xnoedes' is missing in XenoFlow: #{k} of file: #{file_name}"                
+                puts
+                break
+              else
+                # if there's error, it always prints out the error even without puts
+                # puts "#{e}"
+              end
+              #END if
             end
+            #END begin
           end
+          #END each_pair
         end
         #END unless
         # don't symbolized because we use string to get the valuse in other methods
         # symbolized_hash = Xeno::symbolize_hash_keys(hash)
         ret_val = hash
       else
-        puts "* CLI cannot find any xenoflow in file: #{file_path}"
+        puts "* CLI cannot find any XenoFlow in file: #{file_path}"
       end
     else
-      puts "* CLI cannot find xenoflow file: #{file_path}"
+      puts "* CLI cannot find XenoFlow file: #{file_path}"
     end
     #END if
 
@@ -551,7 +689,7 @@ module Xeno
     end
   end
 
-  # and I need to grab the xenode config from xenoflow file and merge it with the default
+  # I need to grab the xenode config from xenoflow file and merge it with the default
   # if will also return the merged config
   def self.write_xenode_config(xenode)
     if xenode

@@ -259,6 +259,7 @@ module XenoCore
 
     def write_to_xenode(xenode_id, msg)
       mctx = "#{self.class}.#{__method__}() - [#{@xenode_id}]"
+      do_debug("wfhiuweh", true)
       if @xenode_config && @xenode_config[:children]
         if xenode_id && @xenode_config[:children].include?(xenode_id)
           do_debug("#{mctx} - sending message to xenode: #{xenode_id}", true)

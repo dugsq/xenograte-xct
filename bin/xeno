@@ -125,22 +125,19 @@ Escort::App.create do |app|
         Xeno::ClearLog.new(options, arguments).execute
       end
     end
+
+    clear_cmd.command :runtime do |msg_cmd|
+      msg_cmd.summary "remove runtime directory"      
+      # msg_cmd.options do |opts|
+      #   opts.opt :xenode_id, "xenode id", :short => '-i', :long => '--id', :type => :string
+      # end
+      msg_cmd.action do |options, arguments|
+        Xeno::ClearRuntime.new(options, arguments).execute
+      end
+    end
+    #END command
     
-    # clear_cmd.command :xenoflow do |clear_xenoflow_cmd|
-    #   clear_xenoflow_cmd.summary "Deletes logs and runtime files for a XenoFlow."
-    #   clear_xenoflow_cmd.description "This will remove all log messages and runtime files for all xenodes in a xenoflow."
-    #   
-    #   clear_xenoflow_cmd.options do |opts|
-    #     opts.opt :xenoflow_id,   "xenoflow id",        :short => '-i', :long => '--id',   :type => :string
-    #     opts.opt :xenoflow_file, "xenoflow file path", :short => '-f', :long => '--file', :type => :string
-    #   end
-    #   clear_xenoflow_cmd.action do |options, arguments|
-    #     Xeno::ClearXenoFlow.new(options, arguments).execute
-    #   end
-    # end
   end
   #END command
-  
-
-  
+    
 end
