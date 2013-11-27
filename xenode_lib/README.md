@@ -21,8 +21,8 @@ You can also download the already made Xenode from the following list:
   * [file-writer-xenode](https://github.com/Nodally/file-writer-xenode) (consumer)
   * [file-reader-xenode](https://github.com/Nodally/file-reader-xenode) (producer)
 * Helper
-  * [echo-xenode](https://github.com/Nodally/echo-xenode) (consumer/producer)
-  * [single-message-xenode](https://github.com/Nodally/single-message-xenode) (producer)
+  * [echo-xenode](https://github.com/Nodally/echo-xenode) (consumer/producer) tested
+  * [single-message-xenode](https://github.com/Nodally/single-message-xenode) (producer) tested
 * Mobile
   * [sms-sender-xenode](https://github.com/Nodally/sms-sender-xenode) (consumer)
 * Web

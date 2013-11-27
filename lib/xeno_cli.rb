@@ -554,17 +554,16 @@ module Xeno
     # get xeno_conf
     # may move this to a helper later because we may need this in other commands
     xeno_conf = {
-      :redis_host => '127.0.0.1',
-      :redis_port => 6379,
-      :redis_db => 0,
-      :new_log_everytime => true
+      "redis_host" => '127.0.0.1',
+      "redis_port" => 6379,
+      "redis_db" => 0,
+      "new_log_everytime" => false
     }
     xeno_conf_file = File.join(lib_dir, '..', 'bin', 'xeno.yml')
     if File.exist?(xeno_conf_file)
       hash = YAML.load(File.read(xeno_conf_file))
       if hash
-        symbolized_hash = Xeno::symbolize_hash_keys(hash)
-        xeno_conf.merge!(symbolized_hash)
+        xeno_conf.merge!(hash)
         # puts "* CLI checking xeno_conf: #{xeno_conf.inspect}"
       end
     end
@@ -618,6 +617,7 @@ module Xeno
   end
   
   # loading xenoflows from file to hash. 
+  # ** NOT symbolized because we use string to get the valuse in other methods
   # Also include some extra keys for easy retrieval (like id and file_name) 
   def self.load_xenoflows_from_file(file_name, plain=false)
     ret_val = {}
@@ -658,8 +658,6 @@ module Xeno
           #END each_pair
         end
         #END unless
-        # don't symbolized because we use string to get the valuse in other methods
-        # symbolized_hash = Xeno::symbolize_hash_keys(hash)
         ret_val = hash
       else
         puts "* CLI cannot find any XenoFlow in file: #{file_path}"
@@ -791,15 +789,5 @@ module Xeno
     ret_val
   end
   # END text_to_hash
-  
-  def self.symbolize_hash_keys(hash)
-    ret_val = {}
-    hash.each_pair do |k,v|
-      v = Xeno::symbolize_hash_keys(v) if v.is_a?(Hash)
-      ret_val[k.to_sym] = v
-    end
-    ret_val
-  end
-  # END symbolize_hash_keys
   
 end

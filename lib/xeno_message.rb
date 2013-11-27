@@ -2,6 +2,9 @@
 # Licensed under the Open Software License version 3.0
 # http://opensource.org/licenses/OSL-3.0
 
+sys_lib = File.expand_path(File.dirname(__FILE__))
+require File.join(sys_lib, "xeno_util")
+
 require 'uuidtools'
 require 'msgpack'
 
@@ -17,6 +20,8 @@ module XenoCore
                   :command, :context, :data, :account_id, :stamp
     
     def initialize(opts = {})
+      @util = XenoCore::Util.new
+      
       @account_id     = opts[:account_id]
       @stamp          = opts.fetch(:stamp, Time.now.strftime(STAMP_FMT))
       @msg_id         = opts.fetch(:msg_id, new_id)
@@ -41,7 +46,7 @@ module XenoCore
       # load local values if its a hash
       if msg.is_a?(Hash)
         # preserve context and data content keys
-        msg_hash = symbolize_hash_keys(msg)
+        msg_hash = @util.symbolize_hash_keys(msg)
         @account_id = msg_hash[:account_id]
         @stamp = msg_hash[:stamp]
         @msg_id = msg_hash[:msg_id]
@@ -53,15 +58,6 @@ module XenoCore
         @data = msg_hash[:data]
       end
       self
-    end
-    
-    def symbolize_hash_keys(hash)
-      ret_val = {}
-      hash.each_pair do |k,v|
-        v = symbolize_hash_keys(v) if v.is_a?(Hash)
-        ret_val[k.to_sym] = v
-      end
-      ret_val
     end
     
     def to_hash

@@ -35,7 +35,7 @@ module XenoCore
         @alert_key    = "#{@xenode_id}:alertmsg"
 
         # hookup subscription to call get_msg()
-        subscribe
+        subscribe()
         
         do_debug("#{mctx} - redis_conn: #{redis_conn} conn_url: #{conn_url}", true)
         get_msg()
@@ -48,6 +48,8 @@ module XenoCore
     
     def subscribe
       mctx = "#{self.class}.#{__method__}() - [#{@xenode_id}]"
+      
+      @rdb_sub.pubsub.subscribe(@msg_pub_key)
       
       # hookup subscription to call get_msg()
       @rdb_sub.pubsub.on(:message) do |channel, msg|

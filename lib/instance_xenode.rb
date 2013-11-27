@@ -2,6 +2,9 @@
 # Licensed under the Open Software License version 3.0
 # http://opensource.org/licenses/OSL-3.0
 
+sys_lib = File.expand_path(File.dirname(__FILE__))
+require File.join(sys_lib, "xeno_util")
+
 require 'logger'
 require 'yaml'
 require 'optparse'
@@ -22,6 +25,8 @@ class InstanceXenode
     mctx = "#{self.class}.#{__method__}"
 
     begin
+      @util = XenoCore::Util.new
+      
       # these are the required_options
       @required_opts = %w"xenode_id xenode_file xenode_class"
 
@@ -115,7 +120,7 @@ class InstanceXenode
     # capture the pid
     pid = $$
     # write the pid to disk - true param will overwrite the file
-    lock_write(@pid_path, pid, true)
+    @util.lock_write(@pid_path, pid, true)
 
     # setup at_exit processing
     at_exit do
@@ -282,11 +287,10 @@ class InstanceXenode
     if File.exist?(def_cfg_path)
       yml = File.read(def_cfg_path)
       def_cfg = YAML.load(yml) if yml
-      def_cfg = symbolize_hash_keys(def_cfg)
     end
-    def_cfg[:loop_delay] = 5.0 unless def_cfg.has_key?(:loop_delay)
-    def_cfg[:enabled] = true unless def_cfg.has_key?(:enabled)
-    def_cfg[:debug] = false unless def_cfg.has_key?(:debug)
+    def_cfg["loop_delay"] = 5.0 unless def_cfg.has_key?("loop_delay")
+    def_cfg["enabled"] = true unless def_cfg.has_key?("enabled")
+    def_cfg["debug"] = false unless def_cfg.has_key?("debug")
     
     # get run config ** NOTE that run_cfg's structure is DIFFERENT than def_cfg
     run_cfg = {}
@@ -295,16 +299,18 @@ class InstanceXenode
     if File.exist?(run_cfg_path)
       yml = File.read(run_cfg_path)
       run_cfg = YAML.load(yml) if yml
-      run_cfg = symbolize_hash_keys(run_cfg)
-      run_cfg[:config] = def_cfg.merge(run_cfg[:config])
+      run_cfg["config"] = def_cfg.merge(run_cfg["config"])
     # if NOT exist, add default config and write it do run directory
     else
-      run_cfg[:config] = def_cfg.merge(run_cfg[:config])
-      hash = stringify_hash_keys(run_cfg)
-      lock_write(run_cfg_path, YAML.dump(hash))
+      run_cfg["config"] = def_cfg.merge(run_cfg["config"])
+      hash = @util.stringify_hash_keys(run_cfg)
+      @util.lock_write(run_cfg_path, YAML.dump(hash))
     end
     
     do_debug("#{mctx} - xenode_config: #{run_cfg.inspect}")
+    
+    # James: we still want config to be in symbol for now
+    run_cfg = @util.symbolize_hash_keys(run_cfg, false)
     run_cfg
   end
 
@@ -321,10 +327,11 @@ class InstanceXenode
     }
     
     # ensure option keys are symbolized and lowercase
-    symbolized_opts = {}
-    opts.each_pair do |key, val|
-      symbolized_opts[key.to_s.downcase.to_sym] = val
-    end
+    symbolized_opts = @util.symbolize_hash_keys(opts)
+
+    # opts.each_pair do |key, val|
+    #   symbolized_opts[key.to_s.downcase.to_sym] = val
+    # end
 
     @opts.merge!(symbolized_opts)
     @xenode_class = @opts[:xenode_class]
@@ -449,51 +456,6 @@ class InstanceXenode
       unless Dir.exist?(dir)
         FileUtils.mkdir_p(dir)
       end
-    end
-  end
-
-  def lock_write(fname, data, purge = false)
-    if purge && File.exist?(fname)
-      File.unlink(fname)
-    end
-    File.open(fname, "a") do |f|
-      f.flock(File::LOCK_EX)
-      f.write(data)
-      f.flush
-      f.flock(File::LOCK_UN)
-      f.close
-    end
-  end
-
-  def symbolize_hash_keys(hash)
-    mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-    ret_val = {}
-    begin
-      
-      if hash
-        hash.each_pair do |k,v|
-          v = symbolize_hash_keys(v) if v.is_a?(Hash)
-          ret_val[k.to_sym] = v
-        end
-      end
-      
-    rescue Exception => e
-      @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
-    end
-    ret_val
-  end
-
-  def stringify_hash_keys(hash)
-    mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-    begin
-      ret_val = {}
-      hash.each_pair do |k,v|
-        v = stringify_hash_keys(v) if v.is_a?(Hash)
-        ret_val[k.to_s] = v
-      end
-      ret_val
-    rescue Exception => e
-      @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
     end
   end
   
