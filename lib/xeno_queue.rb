@@ -54,7 +54,7 @@ module XenoCore
       # hookup subscription to call get_msg()
       @rdb_sub.pubsub.on(:message) do |channel, msg|
         if channel == @msg_pub_key
-          do_debug("#{mctx} - calling get_msg()", true)
+          do_debug("#{mctx} - calling get_msg()")
           get_msg()
         end
       end
