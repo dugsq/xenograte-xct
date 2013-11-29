@@ -2,7 +2,6 @@ twitter_to_sms:
   xenodes: 
     twitter_to_sms_xn1:
       path: twitter_search_xenode
-      node_type_id: df2e8c67-78c7-47e5-80d1-21cd6d19b352
       config: 
         enabled: true
         loop_delay: 60
