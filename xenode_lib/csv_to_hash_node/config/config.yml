@@ -1,7 +1,0 @@
----
-loop_delay: 0.5
-enabled: true
-debug: false
-header: true
-children:
-- csv_out

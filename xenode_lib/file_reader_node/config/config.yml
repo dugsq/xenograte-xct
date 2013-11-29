@@ -1,9 +1,0 @@
----
-loop_delay: 5
-enabled: true
-debug: false
-path_only: false
-dir_path: test_data/
-file_mask: '*.csv'
-rel_path: true
-

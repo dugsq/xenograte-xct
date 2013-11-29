@@ -1,0 +1,34 @@
+twitter_to_sms:
+  xenodes: 
+    twitter_to_sms_xn1:
+      path: twitter_search_xenode
+      config: 
+        enabled: true
+        loop_delay: 60
+        debug: false
+        consumer_key: ABCDE12345
+        consumer_secret: 12345abcde
+        search_string: 'lenovo tablet'
+        search_options:
+          count: 1
+          result_type: recent
+      children:
+      - twitter_to_sms_xn2
+    twitter_to_sms_xn2:
+      path: sms_sender_xenode
+      config:
+        enabled: true
+        loop_delay: 5
+        debug: false
+        mode: prod
+        test_creds:
+          account_sid: ABCDE12345
+          auth_token: 12345abcde
+          default_from: '+12345678900'
+          default_to: '+19876543210'
+        prod_creds:
+          account_sid: ABCDE12345
+          auth_token: 12345abcde
+          default_from: '+12345678900'
+          default_to: '+19876543210'
+      children: []

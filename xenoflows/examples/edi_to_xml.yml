@@ -1,0 +1,33 @@
+---
+EDI_to_XML:
+  xenodes:
+    edi2xmln1:
+      path: file_reader_xenode
+      children:
+      - edi2xmln2
+      config:
+        loop_delay: 5.0
+        enabled: true
+        debug: false
+        path_only: false
+        dir_path: '@this_server/test_data/'
+        file_mask: '*.txt'
+    edi2xmln2:
+      path: edi_to_xml_xenode
+      children:
+      - edi2xmln3
+      config:
+        indent: true
+        include_headers: true
+        loop_delay: 5.0
+        enabled: true
+        debug: false
+    edi2xmln3:
+      path: file_writer_xenode
+      children: []
+      config:
+        enabled: true
+        loop_delay: 50.0
+        dir_path: '@this_server/outbound'
+        file_mode: a
+        debug: false

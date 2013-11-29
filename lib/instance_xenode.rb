@@ -2,13 +2,17 @@
 # Licensed under the Open Software License version 3.0
 # http://opensource.org/licenses/OSL-3.0
 
+sys_lib = File.expand_path(File.dirname(__FILE__))
+require File.join(sys_lib, "xeno_util")
+
 require 'logger'
 require 'yaml'
 require 'optparse'
 require 'optparse/time'
 require 'ostruct'
 require 'fileutils'
-require 'em-synchrony'
+require 'eventmachine'
+require 'redis'
 require 'em-hiredis'
 
 # this clss is called to fork a new instance of a xenode.
@@ -21,8 +25,10 @@ class InstanceXenode
     mctx = "#{self.class}.#{__method__}"
 
     begin
+      @util = XenoCore::Util.new
+      
       # these are the required_options
-      @required_opts = %w"xenode_id xenode_file xenode_klass"
+      @required_opts = %w"xenode_id xenode_file xenode_class"
 
       # parse options
       opts = opts_parse(args)
@@ -38,36 +44,58 @@ class InstanceXenode
       require File.join(@dir_set[:sys_lib], "xenode_base")
       require File.join(@dir_set[:sys_lib], "xeno_queue")
 
-      xenode_basename = File.basename(@opts[:xenode_file],".rb")
-      require File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'lib', xenode_basename )
-
-      # get this xenode's library config dir for defaults
-      @xenode_default_config = File.expand_path(File.join(@dir_set[:xenode_lib_dir], xenode_basename, 'config','config.yml'))
-
+      @xenode_basename = File.basename(@opts[:xenode_file],".rb")
+      require File.join(@dir_set[:xenode_lib_dir], @xenode_basename, 'lib', @xenode_basename )
+      
       # setup the log
       set_log()
-
+      
+      # dir_set
+      do_debug("#{mctx} - @dir_set: #{@dir_set.inspect}")
+      
       do_debug("#{mctx} - xenode_class: #{@xenode_class.inspect}")
 
+      # # show the info to console
+      # puts "\n* run xenode with options:\n"
+      # puts "  xenode_id: #{@xenode_id}"
+      # puts "  xenode_class: #{@xenode_class}"
+      # puts "  redis: #{@opts[:redis_host]}:#{@opts[:redis_port]}"
+      
       # see if redis server is running
       rpid = `ps -e -o pid -o comm | grep [r]edis-server`
       if rpid.to_s.empty?
-        emsg = "#{mctx} - Xenode stopped: Redis server is not running."
+        emsg = "#{mctx} - Xenode stopped: Redis server is not running.\nrun 'redis-server &' to start Redis first"
         warn emsg
         catch_error(emsg)
         exit!
       end
-
+      
       # run the xenode
-      do_debug("#{mctx} - spawning xenode: #{@xenode_id} with options: #{opts.inspect}")
-      spawn_xenode()
-
+      do_debug("#{mctx} - prepare to spawning xenode: #{@xenode_id} with options: #{opts.inspect}", true)
+      
+    # # load error (could be missing gem)
+    # rescue LoadError => e
+    #   do_debug("wfugewuygfyugeyuw")
+    #   
+    # other errors
     rescue Exception => e
+      
+      # if it's an load error, add some extra message
+      if e.is_a?(LoadError)
+        # get the mssing file (gem) name
+        missing_file = e.message.split("cannot load such file -- ")
+        missing_file.delete_if(&:empty?)
+        missing_file = missing_file.join("")
+        msg = "ERROR: Unable to load #{missing_file.inspect}, if it's a gem please make sure it's installed properly."
+        puts msg
+        # return
+      end
+      
       emsg = "#{e.inspect} #{e.backtrace}"
       if @log
         @log.error(emsg)
       else
-        warn emsg
+        raise Exception, emsg
       end
       exit
     end
@@ -75,8 +103,8 @@ class InstanceXenode
   end
 
   def spawn_xenode
-    mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-
+    mctx = "#{self.class}.#{__method__}"
+    
     # raise an error if the xenode is already running
     raise RuntimeError, "#{mctx} - Xenode: is already running." if xenode_running?
 
@@ -87,12 +115,12 @@ class InstanceXenode
 
     # redirect sdtout to null & sdterr to file to capture errors
     $stdout.reopen("/dev/null", "w")
-    $stderr.reopen(@log_file, "a")
+    $stderr.reopen(@pid_path, "a")
 
     # capture the pid
     pid = $$
     # write the pid to disk - true param will overwrite the file
-    lock_write(@pid_path, pid, true)
+    @util.lock_write(@pid_path, pid, true)
 
     # setup at_exit processing
     at_exit do
@@ -105,85 +133,97 @@ class InstanceXenode
       File.unlink(@pid_path) if File.exist?(@pid_path)
     end
 
-    # redis connection - override it here unless you want the defaults
-    redis_conn = nil
-
     @xenode_obj = nil
+    
+    begin
+      # fire up the EM loop
+      EM.run do
 
-    # fire up the EM loop
-    EM.synchrony do
+        # pass-in usefull options
+        opts = {}
+        opts[:log_path]  = @log_path
+        opts[:log] = @log
+        opts[:xenode_id] = @xenode_id
+        opts[:xenode_config] = load_xenode_config()
+        opts[:config] = opts[:xenode_config][:config]
+        opts[:disk_dir] = @dir_set[:disk_dir]
+        opts[:tmp_dir] = @dir_set[:tmp_dir]
+        opts[:redis_conn] = @redis_conn
+        
+        # check if xenode is enabled
+        if opts[:config] && opts[:config][:enabled]
+        
+          @loop_delay = opts[:config][:loop_delay] if opts[:config] && opts[:config][:loop_delay]
+          @loop_delay ||= 5.0
+          
+          @dir_set = nil
 
-      # pass-in usefull options
-      opts = {}
-      opts[:log_path]  = @log_path
-      opts[:log] = @log
-      opts[:xenode_id] = @xenode_id
-      opts[:xenode_config] = load_xenode_config
-      opts[:shared_dir] = @dir_set[:shared_dir]
+          # create the xenode
+          @xenode_obj = Object.const_get(@xenode_class).new(opts)
 
-      @loop_delay = opts[:xenode_config][:loop_delay] if opts[:xenode_config] && opts[:xenode_config][:loop_delay]
-      @loop_delay ||= 0.5
+          # create the xenode_queue object
+          @xenode_queue = XenoCore::XenoQueue.new(opts)
 
-      @dir_set = nil
+          # add the write_to_children method to the xenode class with callback
+          @xenode_obj.on_message do |msg|
+            do_debug("#{mctx} - calling #{@xenode_id}.write_to_children msg: #{msg.inspect}")
+            @xenode_queue.write_to_children(msg)
+          end
 
-      # create the xenode
-      @xenode_obj = Object.const_get(@xenode_class).new(opts)
+          # add write to xenode method to the xenode class with callback
+          @xenode_obj.on_write_to_xenode do |to_xenode_id, msg|
+            do_debug("#{mctx} - calling #{@xenode_id}.write_to_xenode to_xenode_id: #{to_xenode_id} msg: #{msg.inspect}")
+            @xenode_queue.write_to_xenode(to_xenode_id, msg)
+          end
 
-      # create the xenode_queue object
-      # opts.merge! {:log => @log}
-      opts[:log] = @log
-      @xenode_queue = XenoCore::XenoQueue.new(opts)
+          # call Xenode's process_message() with xenode_queue
+          @xenode_queue.on_message do |msg|
+            do_debug("#{mctx} - calling process_message msg: #{msg.inspect}")
+            # send orig msg to xenode's process_message
+            @xenode_obj.process_message(msg)
+          end
 
-      # add the write_to_children method to the xenode class with callback
-      @xenode_obj.on_message do |msg|
-        do_debug("#{mctx} - calling #{@xenode_id}.write_to_children msg: #{msg.inspect}", true)
-        @xenode_queue.write_to_children(msg)
-      end
+          # call xenode's startup() method
+          do_debug("#{mctx} - calling startup on xenode.", true)
+          # don't pass in options here as options are already passed in xenode constructor
+          # @xenode_obj.startup({:log => @log})
+          @xenode_obj.startup()
 
-      # add write to xenode method to the xenode class with callback
-      @xenode_obj.on_write_to_xenode do |to_xenode_id, msg|
-        do_debug("#{mctx} - calling #{@xenode_id}.write_to_xenode to_xenode_id: #{to_xenode_id} msg: #{msg.inspect}")
-        @xenode_queue.write_to_xenode(to_xenode_id, msg)
-      end
+          # capture the signal so we can die nice
+          [:QUIT, :TERM, :INT].each do |sig|
+            trap(sig) do
+              @shutdown = true
+            end
+          end
 
-      # call Xenode's process_message() with xenode_queue
-      @xenode_queue.on_message do |msg|
-        do_debug("#{mctx} - calling process_message msg: #{msg.inspect}", true)
-        # send orig msg to xenode's process_message
-        @xenode_obj.process_message(msg)
-      end
+          # call xenode's process() method periodically based on loop_delay value if it is defined
+          if defined?(@xenode_obj.process)
+            EM.add_periodic_timer(@loop_delay) do
+              do_debug("#{mctx} process called.")
+              @xenode_obj.process
+            end
+          end
 
-      # call xenode's startup() method
-      do_debug("#{mctx} - calling startup on xenode.", true)
-      @xenode_obj.startup({:log => @log})
-
-      # capture the signal so we can die nice
-      [:QUIT, :TERM, :INT].each do |sig|
-        trap(sig) do
-          @shutdown = true
-        end
-      end
-
-      # call xenode's process() method periodically based on loop_delay value if it is defined
-      if defined?(@xenode_obj.process)
-        EM.add_periodic_timer(@loop_delay) do
-          do_debug("#{mctx} process called.")
-          @xenode_obj.process
-        end
-      end
-
-      # add periodic timer to check to see if we need to shut down
-      EM.add_periodic_timer(0.5) do
-        if @shutdown
-          # call the shutdown on the xenode so it can clean up
-          @xenode_obj.shutdown()
+          # add periodic timer to check to see if we need to shut down
+          EM.add_periodic_timer(0.5) do
+            if @shutdown
+              # call the shutdown on the xenode so it can clean up
+              @xenode_obj.shutdown()
+              # end the eventmachine loop
+              EM.stop
+            end
+          end
+          
+        else
+          catch_error("#{mctx} - ERROR Xenode is not enabled.")
           # end the eventmachine loop
           EM.stop
         end
-      end
-
-    end # end of EM.synchrony do
-
+        
+      end # EM.run
+    rescue Exception => e
+      catch_error("#{mctx} - ERROR #{e.inspect} #{e.backtrace}")
+    end
   end
 
   def opts_parse(args)
@@ -214,6 +254,19 @@ class InstanceXenode
       opts.on("-d", "--[no-]debug", "Set log to debug level") do |v|
         options[:debug] = v
       end
+      
+      opts.on("--redis-host REDIS_HOST", "Set redis_host to REDIS_HOST") do |redis_host|
+        options[:redis_host] = redis_host
+      end
+      
+      opts.on("--redis-port REDIS_PORT", "Set redis_port to REDIS_PORT") do |redis_port|
+        options[:redis_port] = redis_port
+      end
+      
+      opts.on("--redis-db REDIS_DB", "Set redis_db to REDIS_DB") do |redis_db|
+        options[:redis_db] = redis_db
+      end
+      
 
     end
 
@@ -222,69 +275,76 @@ class InstanceXenode
     options
 
   end
-
+  
+  # this will load xenode's config in run directory
+  # NOTE that it will return xenode_config, NOT just the config key inside it 
   def load_xenode_config
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
 
-    # set the default return value
-    ret_val = {}
-
-    # init the default_data
-    default_data = nil
-
-    do_debug("#{mctx} - @xenode_default_config: #{@xenode_default_config.inspect}", true)
-
-    # see if the default config file for the xenode type exists
-    if File.exist?(@xenode_default_config)
-      # read the raw yaml
-      yml = File.read(@xenode_default_config)
-      # turn raw yml into ruby hash
-      default_data = YAML.load(yml) if yml
-      default_data = symbolize_hash_keys(default_data)
+    # get default config
+    def_cfg = {}
+    def_cfg_path = File.expand_path(File.join(@dir_set[:xenode_lib_dir], @xenode_basename, 'config','config.yml'))
+    if File.exist?(def_cfg_path)
+      yml = File.read(def_cfg_path)
+      def_cfg = YAML.load(yml) if yml
     end
-
-    # override defaults with instance's config if it exists
-    fp = File.join(@dir_set[:xenodes],@xenode_id,'config.yml')
-    do_debug("#{mctx} - instance config path: #{fp.inspect}", true)
-    # see if the file exists
-    if File.exist?(fp)
-      # read the raw yaml
-      yml = File.read(fp)
-      # turn raw yml into ruby hash
-      yml_data = YAML.load(yml) if yml
-      cfg_data = symbolize_hash_keys(yml_data)
-
-      # set ret_val to cfg_data from instance's config
-      ret_val = cfg_data if cfg_data
-      # merge the hashes overwriting the defaults
-      ret_val = default_data.merge(cfg_data) if default_data
+    def_cfg["loop_delay"] = 5.0 unless def_cfg.has_key?("loop_delay")
+    def_cfg["enabled"] = true unless def_cfg.has_key?("enabled")
+    def_cfg["debug"] = false unless def_cfg.has_key?("debug")
+    
+    # get run config ** NOTE that run_cfg's structure is DIFFERENT than def_cfg
+    run_cfg = {}
+    run_cfg_path = File.join(@dir_set[:config_dir],'config.yml')
+    # if run config exist, merge it from default config
+    if File.exist?(run_cfg_path)
+      yml = File.read(run_cfg_path)
+      run_cfg = YAML.load(yml) if yml
+      run_cfg["config"] = def_cfg.merge(run_cfg["config"])
+    # if NOT exist, add default config and write it do run directory
     else
-      # set ret_val to default_data since there is no instance config file
-      ret_val = default_data if default_data
+      run_cfg["config"] = def_cfg.merge(run_cfg["config"])
+      hash = @util.stringify_hash_keys(run_cfg)
+      @util.lock_write(run_cfg_path, YAML.dump(hash))
     end
-
-    ret_val
+    
+    do_debug("#{mctx} - xenode_config: #{run_cfg.inspect}")
+    
+    # James: we still want config to be in symbol for now
+    run_cfg = @util.symbolize_hash_keys(run_cfg, false)
+    run_cfg
   end
 
   def process_options(opts)
     mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
 
-    @opts = {}
-
+    @opts = {
+      :xenode_id => nil,
+      :xenode_file => nil,
+      :xenode_class => nil,
+      :redis_host => '127.0.0.1',
+      :redis_port => 6379,
+      :redis_db => 0
+    }
+    
     # ensure option keys are symbolized and lowercase
-    opts.each_pair do |key, val|
-      if key == :xenode_class
-        @xenode_class = val
-      end
-      @opts[key.to_s.downcase.to_sym] = val
-    end
+    symbolized_opts = @util.symbolize_hash_keys(opts)
 
-    # pull out the xenode id for conveinience
-    @xenode_id = opts[:xenode_id]
+    # opts.each_pair do |key, val|
+    #   symbolized_opts[key.to_s.downcase.to_sym] = val
+    # end
 
+    @opts.merge!(symbolized_opts)
+    @xenode_class = @opts[:xenode_class]
+    @xenode_id = @opts[:xenode_id]
+    @redis_conn = {
+      :host   => @opts[:redis_host],
+      :port   => @opts[:redis_port],
+      :db     => @opts[:redis_db],
+    }
+        
     # check that all required options were provided
     required_opts
-
+    
   end
 
   def required_opts
@@ -304,8 +364,17 @@ class InstanceXenode
 
   # setup the log (must be done after options are processed)
   def set_log
-    @log_file = File.join(@dir_set[:log_dir],"#{@xenode_id}.log")
-    @log = Logger.new @log_file
+    @log_path = File.join(@dir_set[:log_dir],"xn_#{@xenode_id}.log")
+    @log = Logger.new @log_path
+    
+    # @log.datetime_format = "%Y-%m-%d %H:%M:%S"
+    @log.datetime_format = "%Y-%m-%d"
+    # Here you can format the heading part of each log statement  
+    @log.formatter = proc do |severity, datetime, progname, msg|
+      "#{severity} [#{datetime.strftime('%Y-%m-%d %H:%M:%S.%6N')} ##{Process.pid}]: #{msg}\n"
+    end
+    
+    @log.level = Logger::DEBUG
   end
 
   def do_debug(debug_message, force = false)
@@ -323,7 +392,8 @@ class InstanceXenode
 
   # set directory paths
   def set_dirs
-
+    mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
+    
     # this file is in the lib dir so capture the full path
     sys_lib = File.expand_path(File.dirname(__FILE__))
 
@@ -337,24 +407,29 @@ class InstanceXenode
     xenode_lib_dir = File.join(root_dir,'xenode_lib') # your xenode library
     xeno_flow_dir  = File.join(root_dir,'xenoflows')  # xenoflows directory
     run_dir        = File.join(root_dir,"run")        # run directory for running xenode instances
-    shared_dir     = File.join(run_dir,'shared_dir')  # shared dir used for xenodes to read and write scratch files
+    tmp_dir        = File.join(run_dir,"tmp")         # tmp directory for all xenode instances
     xenodes        = File.join(run_dir,'xenodes')     # xenodes instance directory
+    disk_dir       = File.join(xenodes, @xenode_id, 'files')  # disk dir for xenode to read and write scratch files
+    log_dir        = File.join(xenodes, @xenode_id, 'log') # the log directory
     pid_dir        = File.join(run_dir,'pids')        # pids directory
     @pid_path      = File.join(pid_dir, xenode_pid)   # full path to pid file
+    config_dir     = File.join(xenodes, @xenode_id, 'config')   # xenode's config directory
 
 
     # paths hash make it easy to automate directory methods
     @dir_set = {
-      sys_lib: sys_lib,
-      root_dir: root_dir,
-      log_dir: log_dir,
-      shared_dir: shared_dir,
-      run_dir: run_dir,
-      xenodes: xenodes,
-      xenode_lib_dir: xenode_lib_dir,
-      pid_dir: pid_dir
+      :sys_lib        => sys_lib,
+      :root_dir       => root_dir,
+      :log_dir        => log_dir,
+      :disk_dir       => disk_dir,
+      :run_dir        => run_dir,
+      :tmp_dir        => tmp_dir,
+      :xenodes        => xenodes,
+      :xenode_lib_dir => xenode_lib_dir,
+      :pid_dir        => pid_dir,
+      :config_dir     => config_dir
     }
-
+    
     # make sure the directories exist
     ensure_dirs
 
@@ -383,37 +458,12 @@ class InstanceXenode
       end
     end
   end
-
-  def lock_write(fname, data, purge = false)
-    if purge && File.exist?(fname)
-      File.unlink(fname)
-    end
-    File.open(fname, "a") do |f|
-      f.flock(File::LOCK_EX)
-      f.write(data)
-      f.flush
-      f.flock(File::LOCK_UN)
-      f.close
-    end
-  end
-
-  def symbolize_hash_keys(hash)
-    mctx = "#{self.class}.#{__method__} [#{@xenode_id}]"
-    begin
-      ret_val = {}
-      if hash
-        hash.each_pair do |k,v|
-          v = symbolize_hash_keys(v) if v.is_a?(Hash)
-          ret_val[k.to_sym] = v
-        end
-      end
-      ret_val
-    rescue Exception => e
-      @log.error("#{mctx} - #{e.inspect} #{e.backtrace}")
-    end
-  end
-
+  
 end
 
-InstanceXenode.new(ARGV) if $0 == __FILE__
-exit
+# only run this is this file is run directly 
+# and not instanced in another program
+if $0 == __FILE__
+  InstanceXenode.new(ARGV).spawn_xenode()
+  exit
+end

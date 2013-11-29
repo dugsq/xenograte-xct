@@ -1,7 +1,0 @@
----
-loop_delay: 1.0
-enabled: true
-debug: false
-ship_methods:
-  air: 5
-  sea: 25

@@ -2,6 +2,9 @@
 # Licensed under the Open Software License version 3.0
 # http://opensource.org/licenses/OSL-3.0
 
+sys_lib = File.expand_path(File.dirname(__FILE__))
+require File.join(sys_lib, "xeno_util")
+
 require 'uuidtools'
 require 'msgpack'
 
@@ -17,6 +20,8 @@ module XenoCore
                   :command, :context, :data, :account_id, :stamp
     
     def initialize(opts = {})
+      @util = XenoCore::Util.new
+      
       @account_id     = opts[:account_id]
       @stamp          = opts.fetch(:stamp, Time.now.strftime(STAMP_FMT))
       @msg_id         = opts.fetch(:msg_id, new_id)
@@ -29,37 +34,30 @@ module XenoCore
     end
   
     def load(msg)
-      # parse msg from different mechanisms
-      # msg = msg[2] if msg.is_a?(Array)
+      # if it's a xeno message get its hash
       msg = msg.to_hash if msg.is_a?(XenoCore::Message)
-      unless msg.is_a?(Hash)
-        if msg[0..4] == PACKED_PREFIX
-          msg = XenoCore::Message.unpack(msg)
-        end
+      
+      # unpack it if it is packed
+      if msg.is_a?(String)
+        msg[0..4] == PACKED_PREFIX
+        msg = XenoCore::Message.unpack(msg)
       end
       
-      # preserve context and data content keys
-      msg_hash = symbolize_hash_keys(msg)
-
-      @account_id = msg_hash[:account_id]
-      @stamp = msg_hash[:stamp]
-      @msg_id = msg_hash[:msg_id]
-      @correlation_id = msg_hash[:correlation_id]
-      @to_id = msg_hash[:to_id]
-      @from_id = msg_hash[:from_id]
-      @command = msg_hash[:command]
-      @context = msg_hash[:context]
-      @data = msg_hash[:data]
-      self
-    end
-    
-    def symbolize_hash_keys(hash)
-      ret_val = {}
-      hash.each_pair do |k,v|
-        v = symbolize_hash_keys(v) if v.is_a?(Hash)
-        ret_val[k.to_sym] = v
+      # load local values if its a hash
+      if msg.is_a?(Hash)
+        # preserve context and data content keys
+        msg_hash = @util.symbolize_hash_keys(msg)
+        @account_id = msg_hash[:account_id]
+        @stamp = msg_hash[:stamp]
+        @msg_id = msg_hash[:msg_id]
+        @correlation_id = msg_hash[:correlation_id]
+        @to_id = msg_hash[:to_id]
+        @from_id = msg_hash[:from_id]
+        @command = msg_hash[:command]
+        @context = msg_hash[:context]
+        @data = msg_hash[:data]
       end
-      ret_val
+      self
     end
     
     def to_hash

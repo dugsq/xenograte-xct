@@ -1,0 +1,26 @@
+---
+dropbox_to_gmail:
+  xenodes:
+    dropbox_to_gmail_xn1:
+      path: dropbox_reader_xenode
+      config:
+        enabled: true
+        loop_delay: 5
+        debug: true
+        dropbox_path: /source
+        named_file: hello.csv
+        access_token: ABCDE12345
+      children:
+      - dropbox_to_gmail_xn2
+    dropbox_to_gmail_xn2:
+      path: gmail_sender_xenode
+      config:
+        enabled: true
+        loop_delay: 5
+        debug: true
+        username: jsmith@mydomaindotcom
+        password: ABCDE12345
+        email_to: jdoe@yourdomaindotcom
+        email_subject: From Dropbox
+        email_body: ''
+      children: []
