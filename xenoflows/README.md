@@ -4,7 +4,7 @@ This is where you put the XenoFlow YAML file.
 
 ### examples:
 
-* [__dropbox_to_gmail__](./examples/dropbox_to_gmail)
+* [__dropbox_to_gmail__](./examples/dropbox_to_gmail.yml)
   * reading a file from your DropBox account and send the content to the specified email
   * please download the Xenodes into to your `/xenodes` folder:
     * [dropbox_reader_xenode](https://github.com/Nodally/dropbox_reader_xenode)
