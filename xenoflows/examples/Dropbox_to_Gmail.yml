@@ -18,9 +18,9 @@ dropbox_to_gmail:
         enabled: true
         loop_delay: 5
         debug: true
-        username: jsmith@mydomain.com
+        username: jsmith@mydomaindotcom
         password: ABCDE12345
-        email_to: jdoe@@yourdomain.com
+        email_to: jdoe@yourdomaindotcom
         email_subject: From Dropbox
         email_body: ''
       children: []
