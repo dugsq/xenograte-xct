@@ -27,4 +27,8 @@ xenode_lib/*
 # Ignore everything in /xenoflows except README and examples/
 xenoflows/*
 !xenoflows/README.md
-!xenoflows/examples/*
+!xenoflows/examples/dropbox_to_gmail.yml
+!xenoflows/examples/rss_feeds_to_gmail.yml
+!xenoflows/examples/rss_feeds_to_sms.yml
+!xenoflows/examples/twitter_to_dropbox.yml
+!xenoflows/examples/twitter_to_sms.yml
