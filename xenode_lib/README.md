@@ -29,4 +29,4 @@ This is the folder where your Xenodes should be located. The following is a list
 (Note: categorization of Xenodes is still in progress, you may see changes in arrangement over time)
 
 
-For more information, please check on our [Wiki page](../../wiki)
+For more information, please check on our [Wiki page](../wiki)
