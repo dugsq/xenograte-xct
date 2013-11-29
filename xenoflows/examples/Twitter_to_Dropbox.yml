@@ -6,7 +6,7 @@ twitter_to_dropbox:
       config:
         enabled: true
         loop_delay: 60
-        debug: true
+        debug: false
         consumer_key: ABCDE12345
         consumer_secret: 12345abcde
         search_string: '#ruby'
