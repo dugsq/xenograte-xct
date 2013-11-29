@@ -24,11 +24,11 @@ We invite you to follow the development and community updates on Xenograte:
 - To report a bug, or raise a question or an idea, please post it on the [issue list][20]
 - To start a discussion, visit the [Xenograte Community][23] linkedin group.
 - Follow [@nodally][21] on Twitter.
-- Read and subscribe to the [Nodally Blog][22].
+- Read and subscribe to the [Xenograte Blog][22].
 
 [20]: https://github.com/Nodally/xenograte-xct/issues
 [21]: http://twitter.com/nodally
-[22]: http://blog.nodally.com
+[22]: http://blog.xenograte.com
 [23]: http://www.linkedin.com/groups/Xenograte-Community-5068501
 
 ## Contributing
