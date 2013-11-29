@@ -60,4 +60,4 @@ This is the folder where the Xenoflows should be located. We've added a few exam
   * to stop: `bin/xeno stop xenoflow -f examples/edi_to_xml`
 
 
-For more information, please check on our [Wiki page](../../wiki)
+For more information, please check on our [Wiki page](https://github.com/Nodally/xenograte-xct/wiki)
