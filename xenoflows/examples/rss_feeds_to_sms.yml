@@ -1,0 +1,51 @@
+---
+rss_feeds_to_sms:
+  xenodes:
+    rss_feeds_to_sms_xn1:
+      path: rss_feed_xenode
+      config:
+        enabled: true
+        loop_delay: 1
+        debug: false
+        rss_to_sms: true
+        URL: http://www.craigslist.org/about/best/all/index.rss
+      children:
+      - rss_feeds_to_sms_xn4
+    rss_feeds_to_sms_xn2:
+      path: rss_feed_xenode
+      config:
+        enabled: true
+        loop_delay: 2
+        debug: false
+        rss_to_sms: true
+        URL: https://news.google.ca/news/feeds?pz=1&cf=all&ned=ca&hl=en&topic=tc&output=rss
+      children:
+      - rss_feeds_to_sms_xn4
+    rss_feeds_to_sms_xn3:
+      path: rss_feed_xenode
+      config:
+        enabled: true
+        loop_delay: 3
+        debug: false
+        rss_to_sms: true
+        URL: https://news.ycombinator.com/rss
+      children:
+      - rss_feeds_to_sms_xn4
+    rss_feeds_to_sms_xn4:
+        path: sms_sender_xenode
+        config:
+          enabled: true
+          loop_delay: 5
+          debug: false
+          mode: prod
+          test_creds:
+            account_sid: ABCDE12345
+            auth_token: 12345abcde
+            default_from: '+12345678900'
+            default_to: '+19876543210'
+          prod_creds:
+            account_sid: ABCDE12345
+            auth_token: 12345abcde
+            default_from: '+12345678900'
+            default_to: '+19876543210'
+        children: []

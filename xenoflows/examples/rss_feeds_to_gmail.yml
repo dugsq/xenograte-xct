@@ -1,0 +1,45 @@
+---
+rss_feeds_to_gmail:
+  xenodes:
+    rss_feeds_to_gmail_xn1:
+      path: rss_feed_xenode
+      config:
+        enabled: true
+        loop_delay: 1
+        debug: false
+        rss_to_sms: false
+        URL: http://www.craigslist.org/about/best/all/index.rss
+      children:
+      - rss_feeds_to_gmail_xn4
+    rss_feeds_to_gmail_xn2:
+      path: rss_feed_xenode
+      config:
+        enabled: true
+        loop_delay: 2
+        debug: false
+        rss_to_sms: false
+        URL: https://news.google.ca/news/feeds?pz=1&cf=all&ned=ca&hl=en&topic=tc&output=rss
+      children:
+      - rss_feeds_to_gmail_xn4
+    rss_feeds_to_gmail_xn3:
+      path: rss_feed_xenode
+      config:
+        enabled: true
+        loop_delay: 3
+        debug: false
+        rss_to_sms: false
+        URL: https://news.ycombinator.com/rss
+      children:
+      - rss_feeds_to_gmail_xn4
+    rss_feeds_to_gmail_xn4:
+      path: gmail_sender_xenode
+      config:
+        enabled: true
+        loop_delay: 5
+        debug: false
+        username: jsmith@mydomain.com
+        password: ABCDE12345
+        email_to: jdoe@@yourdomain.com
+        email_subject: Latest RSS Feed
+        email_body: ''
+      children: []

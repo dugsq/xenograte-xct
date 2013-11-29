@@ -1,0 +1,38 @@
+---
+twitter_to_dropbox:
+  xenodes:
+    twitter_to_dropbox_xn1:
+      path: twitter_search_xenode
+      config:
+        enabled: true
+        loop_delay: 60
+        debug: true
+        consumer_key: ABCDE12345
+        consumer_secret: 12345abcde
+        search_string: '#ruby'
+        search_options:
+          count: 3
+          result_type: recent
+      children:
+      - twitter_to_dropbox_xn2
+    twitter_to_dropbox_xn2:
+      path: hash_to_csv_xenode
+      config:
+        enabled: true
+        loop_delay: 5
+        debug: false
+        has_header: true
+        row_delim: ''
+        col_delim: ','
+      children:
+      - twitter_to_dropbox_xn3
+    twitter_to_dropbox_xn3:
+      path: dropbox_writer_xenode
+      config:
+        enabled: true
+        loop_delay: 5
+        debug: false
+        dropbox_path: /Target
+        named_file: twitter search.csv
+        access_token: ABCDE12345
+      children: []
