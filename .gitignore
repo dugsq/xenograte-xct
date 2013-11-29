@@ -24,7 +24,7 @@ doc/
 xenode_lib/*
 !xenode_lib/README.md
 
-# Ignore everything in /xenoflows except README and example_xenoflow
+# Ignore everything in /xenoflows except README and examples/
 xenoflows/*
 !xenoflows/README.md
-!xenoflows/example_xenoflow.yml
+!xenoflows/examples/*
