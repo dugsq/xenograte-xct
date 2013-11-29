@@ -1,12 +1,12 @@
 ## Xenoflows
 
-This is where you put the XenoFlow YAML file.
+This is the folder where the Xenoflows should be located. We've added a few examples here for you to use as templates or to learn how to create your own Xenoflows.
 
-### examples:
+### Examples:
 
 * [__dropbox_to_gmail__](./examples/dropbox_to_gmail.yml)
- * reading a file from your DropBox account and send the content to the specified email
-  * please download the Xenodes into to your `/xenodes` folder:
+ * read a file from your Dropbox account and send the content in an email through your Gmail account
+  * please download the following Xenodes into to your `/xenodes` folder:
     * [dropbox_reader_xenode](https://github.com/Nodally/dropbox_reader_xenode)
     * [gmail_sender_xenode](https://github.com/Nodally/gmail_sender_xenode)
   * to run: `bin/xeno run xenoflow -f examples/dropbox_to_gmail`
@@ -14,36 +14,48 @@ This is where you put the XenoFlow YAML file.
 
 
 * [__rss_feeds_to_gmail__](./examples/rss_feeds_to_gmail.yml)
-  * monitoring the specified rss feeds and send an email whenever a new post appears
-  * please download the Xenodes into to your `/xenodes` folder:
-    * [dropbox_reader_xenode](https://github.com/Nodally/rss_feed_xenode)
+  * monitor specific rss feeds and send new feeds in an email through your Gmail account
+  * please download the following Xenodes into to your `/xenodes` folder:
+    * [rss_feed_xenode](https://github.com/Nodally/rss_feed_xenode)
     * [gmail_sender_xenode](https://github.com/Nodally/gmail_sender_xenode)
   * to run: `bin/xeno run xenoflow -f examples/rss_feeds_to_gmail`
   * to stop: `bin/xeno stop xenoflow -f examples/rss_feeds_to_gmail`
 
 
 * [__rss_feeds_to_sms__](./examples/rss_feeds_to_sms.yml)
-  * monitoring the specified rss feeds and send an sms message whenever a new post appears
-  * please download the Xenodes into to your `/xenodes` folder:
-    * [dropbox_reader_xenode](https://github.com/Nodally/dropbox_reader_xenode)
-    * [gmail_sender_xenode](https://github.com/Nodally/gmail_sender_xenode)
+  * monitor specific rss feeds and send new feeds in an SMS message to your smartphone through your Twilio account
+  * please download the following Xenodes into to your `/xenodes` folder:
+    * [rss_feed_xenode](https://github.com/Nodally/rss_feed_xenode)
+    * [sms_sender_xenode](https://github.com/Nodally/sms_sender_xenode)
   * to run: `bin/xeno run xenoflow -f examples/rss_feeds_to_sms`
-  * to stop: `bin/xeno stop xenoflow -f examples/sms_sender_xenode`
+  * to stop: `bin/xeno stop xenoflow -f examples/rss_feeds_to_sms`
 
 
 * [__twitter_to_dropbox__](./examples/twitter_to_dropbox.yml)
-  * monitoring a term from Twitter and save the result into the DropBox
-  * please download the Xenodes into to your `/xenodes` folder:
+  * perform a Twitter search and save the search result into a named CSV file on Dropbox
+  * please download the following Xenodes into to your `/xenodes` folder:
     * [twitter_search_xenode](https://github.com/Nodally/twitter_search_xenode)
     * [hash_to_csv_xenode](https://github.com/Nodally/hash_to_csv_xenode)
     * [dropbox_writer_xenode](https://github.com/Nodally/dropbox_writer_xenode)
   * to run: `bin/xeno run xenoflow -f examples/twitter_to_dropbox`
   * to stop: `bin/xeno stop xenoflow -f examples/twitter_to_dropbox`
 
+
 * [__twitter_to_sms__](./examples/twitter_to_sms.yml)
-  * monitoring a term from Twitter and send the result through sms
-  * please download the Xenodes into to your `/xenodes` folder:
+  * perform a Twitter search and send the search result in an SMS message to your smartphone through your Twilio account
+  * please download the following Xenodes into to your `/xenodes` folder:
     * [twitter_search_xenode](https://github.com/Nodally/twitter_search_xenode)
     * [sms_sender_xenode](https://github.com/Nodally/sms_sender_xenode)
   * to run: `bin/xeno run xenoflow -f examples/twitter_to_sms`
   * to stop: `bin/xeno stop xenoflow -f examples/twitter_to_sms` 
+
+
+* [__EDI_to_XML__](./examples/edi_to_xml.yml)
+ * read a EDI file from a local directory, convert to XML format, and write an XML file to a local directory
+  * please download the following Xenodes into to your `/xenodes` folder:
+    * [file_reader_xenode](https://github.com/Nodally/file_reader_xenode)
+    * [edi_to_xml_xenode](https://github.com/Nodally/edi_to_xml_xenode)
+    * [file_writer_xenode](https://github.com/Nodally/file_writer_xenode)
+  * to run: `bin/xeno run xenoflow -f examples/edi_to_xml`
+  * to stop: `bin/xeno stop xenoflow -f examples/edi_to_xml`
+
