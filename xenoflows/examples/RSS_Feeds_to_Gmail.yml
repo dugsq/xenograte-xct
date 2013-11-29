@@ -37,9 +37,9 @@ rss_feeds_to_gmail:
         enabled: true
         loop_delay: 5
         debug: false
-        username: jsmith@mydomain.com
+        username: jsmith@mydomaindotcom
         password: ABCDE12345
-        email_to: jdoe@@yourdomain.com
+        email_to: jdoe@yourdomaindotcom
         email_subject: Latest RSS Feed
         email_body: ''
       children: []
