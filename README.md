@@ -33,12 +33,6 @@ We invite you to follow the development and community updates on Xenograte:
 
 ## Contributing
 
-The Xenograte Community Toolkit is open source and we encourage you to contribute! The community is yours 
-to grow so if you have built cool new Xenodes or XenoFlows, have suggestions for improvements, or if you 
-found a bug that needs to be fixed, feel free to fork the projects and do a pull request. Please review the 
-[contributing guidelines](CONTRIBUTING.md) for details.
+The Xenograte Community Toolkit is open source and we encourage you to contribute! The community is yours to grow so if you have built cool new Xenodes or Xenoflows that you want to share with th rest of the community, have suggestions for improvements, or if you found a bug that needs to be fixed, feel free to fork the projects and do a pull request. Please review the [contributing guidelines](CONTRIBUTING.md) for details.
 
-The Xenograte community belongs to its users and it will be built from the bottom up, so every bit of your 
-contribution will help to grow this community, be it sharing Xenodes, submitting a bug, providing feedback, 
-discussing problems to solve, etc. We are certain that everything you do will benefit everyone in the 
-community down the road!
+The Xenograte community belongs to its users and it will be built from the bottom up, so every bit of your contribution will help to grow this community, be it sharing Xenodes, submitting a bug, providing feedback, discussing problems to solve, etc. We are certain that everything you do will benefit everyone in the community down the road!
