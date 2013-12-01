@@ -24,10 +24,10 @@ We invite you to follow the development and community updates on Xenograte so if
 concerns, ideas, or just need help: 
 - Go to the [Xenograte Community][23] linkedin group.
 - Follow [@nodally][21] on Twitter.
-- Read and subscribe to the [Nodally Blog][22].
+- Read and subscribe to the [Xenograte Blog][22].
 
 [21]: http://twitter.com/nodally
-[22]: http://blog.nodally.com
+[22]: http://blog.xenograte.com
 [23]: http://www.linkedin.com/groups/Xenograte-Community-5068501
 
 The Command-line Interface and instancing components are written in such a way that they will provide 
