@@ -12,7 +12,6 @@ module Helpers
   def set_opts
     ret_val = {}
     root_dir = File.expand_path(File.join(File.dirname(__FILE__),'..'))
-root_dir.must_equal "poo"
 
     xenode_pid = "#{@xenode_id}_pid"
 
