@@ -96,22 +96,6 @@ module XenoCore
       fp
     end
     
-    # # James: this method is used to apply the system token into the config
-    # def apply_sys_token(config)
-    #   if config.is_a?(String)
-    #     # this is where we substitute token with values
-    #     config.gsub!("@disk_dir", @disk_dir) if config.include?("@disk_dir") && @disk_dir
-    #     config.gsub!("@tmp_dir", @tmp_dir) if config.include?("@tmp_dir") && @tmp_dir
-    #   elsif config.is_a?(Hash)
-    #     config.each_pair do |key, value|
-    #       config[key] = apply_sys_token(value)
-    #     end
-    #     #END each_pair
-    #   end 
-    #   config
-    # end
-    # #END apply_sys_token
-    
     
   end
   
